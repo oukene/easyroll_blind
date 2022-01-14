@@ -1,0 +1,29 @@
+{
+  "title": "EasyRoll Blind",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "area_name": "Enter the name of the blind installation area"
+        },
+        "description": "Click OK to add the blind.",
+        "title": "Add EasyRoll Blind"
+      }
+    },
+    "error": {
+    },
+    "abort": {
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "EasyRoll blind option",
+        "data": {
+          "refresh_interval": "state update cycle(seconds)",
+          "use_setup": "Use setup mode"
+        }
+      }
+    }
+  }
+}

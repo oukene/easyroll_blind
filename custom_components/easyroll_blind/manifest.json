@@ -1,0 +1,14 @@
+{
+  "domain": "easyroll_blind",
+  "name": "EasyRoll Blind",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/detailed_hello_world_push",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@oukene"],
+  "iot_class": "local_polling",
+  "version": "0.1.0"
+}

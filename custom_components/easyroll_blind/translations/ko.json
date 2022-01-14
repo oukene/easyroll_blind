@@ -1,0 +1,29 @@
+{
+  "title": "\uC774\uC9C0\uB864 \uBE14\uB77C\uC778\uB4DC",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "area_name": "\uBE14\uB77C\uC778\uB4DC \uC124\uCE58 \uC601\uC5ED\uC758 \uC774\uB984\uC744 \uC785\uB825\uD558\uC138\uC694"
+        },
+        "description": "\uD655\uC778\uC744 \uB204\uB974\uBA74 \uBE14\uB77C\uC778\uB4DC\uB97C \uCD94\uAC00\uD569\uB2C8\uB2E4.",
+        "title": "\uC774\uC9C0\uB864 \uBE14\uB77C\uC778\uB4DC\uB97C \uCD94\uAC00\uD569\uB2C8\uB2E4"
+      }
+    },
+    "error": {
+    },
+    "abort": {
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "\uC774\uC9C0\uB864 \uBE14\uB77C\uC778\uB4DC \uC635\uC158",
+        "data": {
+          "refresh_interval": "\uC0C1\uD0DC \uAC31\uC2E0 \uC8FC\uAE30(seconds)",
+          "use_setup": "\uC124\uC815\uBAA8\uB4DC \uC0AC\uC6A9"
+        }
+      }
+    }
+  }
+}
