@@ -4,6 +4,7 @@ import json
 import logging
 import aiohttp
 import socket
+import threading
 
 from . import hub
 from homeassistant import config_entries, core
@@ -33,7 +34,7 @@ async def async_setup_entry(
     if use_setup_mode == None:
         use_setup_mode = False
 
-    refresh_interval = entry.options.get(CONF_USE_SETUP_MODE)
+    refresh_interval = entry.options.get(CONF_REFRESH_INTERVAL)
     if refresh_interval == None:
         refresh_interval = DEFAULT_REFRESH_INTERVAL
 
@@ -43,7 +44,6 @@ async def async_setup_entry(
     hub2 = hass.data[DOMAIN][entry.entry_id]
 
     use_setup_mode = entry.data.get(CONF_USE_SETUP_MODE)
-    #_LOGGER.error("config_entry _ init : " + use_setup_mode)
 
     loop = asyncio.get_event_loop()
     loop.create_task(delayed_update(hass, entry, hub2))
@@ -74,24 +74,25 @@ def get_subnet_ip(ip):
     return subnet
 
 async def get_html(hub2, subnet, i):
-    _LOGGER.error("call get html")
+    _LOGGER.debug("call get html")
     try:
         async with aiohttp.ClientSession() as session:
             url = "http://" + subnet + str(i) + ":20318/lstinfo"
             #url = "http://192.168.11.120:20318/lstinfo"
-            _LOGGER.error("url : " + url)
+            _LOGGER.debug("url : " + url)
             async with await session.get(url, timeout=SEARCH_TIMEOUT) as response:
                 raw_data = await response.read()
                 data = json.loads(raw_data)
-                _LOGGER.error(data)
-                _LOGGER.error("response local ip : " + data["local_ip"])
+                _LOGGER.debug(data)
+                _LOGGER.debug("response local ip : " + data["local_ip"])
                 hub2.rollers.append(hub.Roller(hub2._area_name, data["local_ip"], hub2))
+                #hub2.rollers.append(hub.Roller(hub2._area_name+"2", data["local_ip"], hub2))
     except Exception:
         """"""
             
 async def delayed_update(hass, entry, hub2):
     """Publish updates, with a random delay to emulate interaction with device."""
-    _LOGGER.error("call delayed update")
+    _LOGGER.debug("call delayed update")
     subnet = get_subnet_ip(extract_ip())
 
     await asyncio.gather(
@@ -99,13 +100,17 @@ async def delayed_update(hass, entry, hub2):
         )
     
     # Forward the setup to the sensor platform.
-    _LOGGER.error("Hub Size : " + str(len(hub2.rollers)))
+    _LOGGER.debug("Hub Size : " + str(len(hub2.rollers)))
+
+    hub2.rollers.append(hub.Roller(hub2._area_name, "Group", hub2))
     
     for component in PLATFORMS:
-        _LOGGER.error("create component : " + component)
+        _LOGGER.debug("create component : " + component)
         await hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
+
+    threading.Timer(10, await delayed_update(hass, entry, hub2)).start()
 
 async def options_update_listener(
     hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
@@ -118,6 +123,11 @@ async def async_unload_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Unload a config entry."""
+
+    hub = hass.data[DOMAIN][entry.entry_id]
+    for roller in hub.rollers:
+        roller.remove = True
+
     unload_ok = all(
         await asyncio.gather(
                 *[

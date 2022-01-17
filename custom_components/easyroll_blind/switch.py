@@ -19,9 +19,9 @@ from homeassistant.const import (
 from homeassistant.components.switch import (
     SwitchEntity,
 )
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.components.switch import ENTITY_ID_FORMAT
 from homeassistant.helpers.entity import async_generate_entity_id
-from .const import CONF_REFRESH_INTERVAL, CONF_USE_SETUP_MODE, DOMAIN, SNAME_AUTO_LEVELING, SNAME_FIND_ME, SNAME_FORCE_DOWN, SNAME_FORCE_UP, SNAME_JOG_DOWN, SNAME_JOG_UP, SNAME_MOVE_M1, SNAME_MOVE_M2, SNAME_MOVE_M3, SNAME_SAVE_BOTTOM, SNAME_SAVE_M1, SNAME_SAVE_M2, SNAME_SAVE_M3, SNAME_SAVE_TOP
+from .const import CONF_USE_SETUP_MODE, DOMAIN, SNAME_AUTO_LEVELING, SNAME_FIND_ME, SNAME_FORCE_DOWN, SNAME_FORCE_UP, SNAME_JOG_DOWN, SNAME_JOG_UP, SNAME_MOVE_M1, SNAME_MOVE_M2, SNAME_MOVE_M3, SNAME_SAVE_BOTTOM, SNAME_SAVE_M1, SNAME_SAVE_M2, SNAME_SAVE_M3, SNAME_SAVE_TOP
 
 from homeassistant.const import ATTR_VOLTAGE
 
@@ -44,12 +44,13 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         new_devices.append(CommandSwitch(hass, roller, SNAME_MOVE_M1))
         new_devices.append(CommandSwitch(hass, roller, SNAME_MOVE_M2))
         new_devices.append(CommandSwitch(hass, roller, SNAME_MOVE_M3))
-        new_devices.append(CommandSwitch(hass, roller, SNAME_JOG_UP))
-        new_devices.append(CommandSwitch(hass, roller, SNAME_JOG_DOWN))
-        new_devices.append(CommandSwitch(hass, roller, SNAME_FIND_ME))
+        if roller._group_device == False:
+            new_devices.append(CommandSwitch(hass, roller, SNAME_JOG_UP))
+            new_devices.append(CommandSwitch(hass, roller, SNAME_JOG_DOWN))
+            new_devices.append(CommandSwitch(hass, roller, SNAME_FIND_ME))
         new_devices.append(CommandSwitch(hass, roller, SNAME_AUTO_LEVELING))
 
-        if use_setup_mode == True:
+        if use_setup_mode == True and roller._group_device == False:
             new_devices.append(CommandSwitch(hass, roller, SNAME_SAVE_TOP))
             new_devices.append(CommandSwitch(hass, roller, SNAME_SAVE_BOTTOM))
             new_devices.append(CommandSwitch(hass, roller, SNAME_SAVE_M1))

@@ -8,11 +8,13 @@ from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, PLATFORM_S
 # This is the internal name of the integration, it should also match the directory
 # name for the integration.
 DOMAIN = "easyroll_blind"
+VERSION = "1.0.0"
 
 ENDPOINT_START = 1
 ENDPOINT_END = 254
 
 SEARCH_TIMEOUT = 5
+SEARCH_PERIOD = 120
 
 CONF_AREA_NAME = "area_name"
 CONF_REFRESH_INTERVAL = "refresh_interval"

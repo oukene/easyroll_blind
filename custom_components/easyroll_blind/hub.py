@@ -10,20 +10,25 @@ import logging
 import aiohttp
 import threading
 import json
+import time
 
 import requests
 from timeit import default_timer as dt
 
 from homeassistant.components.cover import DOMAIN, SUPPORT_SET_POSITION
+from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
 
-from custom_components.easyroll_blind.const import DEFAULT_CMD_REFRESH_INTERVAL
+from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.helpers.entity import async_generate_entity_id
+import custom_components.easyroll_blind.const as const
+from custom_components.easyroll_blind.const import DEFAULT_CMD_REFRESH_INTERVAL, VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
 class Hub:
     """Dummy hub for Hello World example."""
 
-    manufacturer = "Demonstration Corp"
+    manufacturer = const.DOMAIN
     
     def __init__(self, hass, area_name, setup_mode, refresh_interval):
         """Init dummy hub."""
@@ -32,6 +37,7 @@ class Hub:
         self._id = area_name
         self._setup_mode = setup_mode
         self._refresh_interval = refresh_interval
+        self.hass = hass
 
         self.rollers = [
             #Roller(f"{self._id}_1", f"{self._name} 1", self),
@@ -42,7 +48,58 @@ class Hub:
 
     async def leveling(self, position):
         for roller in self.rollers:
+            if roller._group_device == True:
+                continue
             await roller.set_position(position)
+
+    async def leveling_group(self):
+        _LOGGER.debug("call set level group")
+        _position = None
+        for roller in self.rollers:
+            if roller._group_device == True:
+                continue
+
+            entity_state = self.hass.states.get(roller._cover_entity_id)
+            if entity_state == STATE_UNKNOWN or entity_state == STATE_UNAVAILABLE or entity_state == None:
+                continue
+
+            _position = roller._current_position
+            _LOGGER.debug("set leveling position : " + str(_position))
+            break
+        
+        await self.leveling(_position)
+
+
+    async def move_m1(self):
+        for roller in self.rollers:
+            if roller._group_device == True:
+                continue
+            await roller.move_m1()
+
+    async def move_m2(self):
+        for roller in self.rollers:
+            if roller._group_device == True:
+                continue
+            await roller.move_m2()
+
+    async def move_m3(self):
+        for roller in self.rollers:
+            if roller._group_device == True:
+                continue
+            await roller.move_m3()
+
+    async def set_position(self, position):
+        for roller in self.rollers:
+            if roller._group_device == True:
+                continue
+            await roller.set_position(position)
+
+    async def set_stop(self):
+        for roller in self.rollers:
+            if roller._group_device == True:
+                continue
+            await roller.set_stop()
+
 
     @property
     def hub_id(self):
@@ -62,23 +119,32 @@ class Roller:
         """Init dummy roller."""
         self._id = name + "_" + local_ip
         self.hub = hub
+        self.hass = hub._hass
         self._setup_mode = hub._setup_mode
         self._refresh_interval = hub._refresh_interval
-        self._name = local_ip
+        if local_ip == "Group":
+            self._name = name + "_" + local_ip
+            self._group_device = True
+        else:
+            self._name = local_ip
+            self._group_device = False
         self._local_ip = local_ip
         self._callbacks = set()
         self._loop = asyncio.get_event_loop()
         self._target_position = 0
         self._current_position = 0
-        self._cmd_refresh_timer = None
+        self._cmd_refresh_count = 0
+        self._cover_entity_id = None
+        # self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, "{}_{}".format(self._id, name), hass=hub._hass)
         # Reports if the roller is moving up or down.
         # >0 is up, <0 is down. This very much just for demonstration.
         self.moving = 0
+        self.remove = False
         self._memory = [None, None, None]
 
         # Some static information about this device
-        self.firmware_version = "0.0.1"
-        self.model = "Test Device"
+        self.firmware_version = const.VERSION
+        self.model = const.DOMAIN
 
         self._loop.create_task(self.easyroll_command("lstinfo", ""))
 
@@ -103,19 +169,26 @@ class Roller:
         return self._current_position
 
     def get_memory(self, order):
-        # _LOGGER.error("get memory memory : %s", self._memory[order])
         return self._memory[order]
 
     def set_memory(self, order):
-        _LOGGER.error("set memory current position : %s", self._current_position)
+        _LOGGER.debug("set memory current position : %s", self._current_position)
         self._memory[order] = self._current_position
         self._loop.create_task(self.delayed_update())
+
+    def set_cover_entity_id(self, entity_id):
+        self._cover_entity_id = entity_id
 
     async def set_stop(self):
         #self.set_position(self._current_position)
         #await self.publish_updates(self._current_position)
+        if self._group_device == True:
+            await self.hub.set_stop()
+            return
+
         await self._loop.create_task(self.easyroll_command("general", "SS"))
         await self._loop.create_task(self.easyroll_command("lstinfo", ""))
+        self.moving = 0
         #self._target_position = self._current_position
         #await self._loop.create_task(self.easyroll_command("lstinfo", ""))
 
@@ -125,8 +198,17 @@ class Roller:
 
         State is announced a random number of seconds later.
         """
+        if self._group_device == True:
+            await self.hub.set_position(position)
+            return
+
+        if self._cover_entity_id == None:
+            return
+        entity_state = self.hass.states.get(self._cover_entity_id)
+        if entity_state == STATE_UNKNOWN or entity_state == STATE_UNAVAILABLE or entity_state == None:
+            return
+
         self._target_position = position
-        self.moving = 1
         # Update the moving status, and broadcast the update
         #self.moving = position - 50
         # self._current_position = position
@@ -135,19 +217,29 @@ class Roller:
         #self._loop.create_task(self.easyroll_command("lstinfo", ""))
 
     async def move_m1(self):
-        _LOGGER.info("call move m1")
+        if self._group_device == True:
+            await self.hub.move_m1()
+            return
+        _LOGGER.debug("call move m1")
+        
         self._loop.create_task(self.easyroll_command("general", "M1"))
         
     async def move_m2(self):
-        _LOGGER.info("call move m2")
+        if self._group_device == True:
+            await self.hub.move_m2()
+            return
+        _LOGGER.debug("call move m2")
         self._loop.create_task(self.easyroll_command("general", "M2"))
 
     async def move_m3(self):
-        _LOGGER.info("call move m3")
+        _LOGGER.debug("call move m3")
+        if self._group_device == True:
+            await self.hub.move_m3()
+            return
         self._loop.create_task(self.easyroll_command("general", "M3"))
 
     async def jog_up(self):
-        _LOGGER.info("call jog up")
+        _LOGGER.debug("call jog up")
         if self._setup_mode == True:
             self._loop.create_task(self.easyroll_command("force", "FSU"))
         else:
@@ -156,7 +248,7 @@ class Roller:
         self._loop.create_task(self.easyroll_command("lstinfo", ""))
 
     async def jog_down(self):
-        _LOGGER.info("call jog down")
+        _LOGGER.debug("call jog down")
         if self._setup_mode == True:
             self._loop.create_task(self.easyroll_command("force", "FSD"))
         else:
@@ -165,43 +257,61 @@ class Roller:
         self._loop.create_task(self.easyroll_command("lstinfo", ""))
     
     async def find_me(self):
-        _LOGGER.info("find me")
+        _LOGGER.debug("find me")
+        _LOGGER.debug("current position : " + str(self._current_position))
         if self._current_position <= 0:
-            self._loop.create_task(self.easyroll_command("general", "SU"))
-            self._loop.create_task(self.easyroll_command("general", "SD"))
-        elif self._current_position >= 100:
-            self._loop.create_task(self.easyroll_command("general", "SD"))
-            self._loop.create_task(self.easyroll_command("general", "SU"))
-
-        self._loop.create_task(self.easyroll_command("lstinfo", ""))
+            # 닫겨 있는 상태
+            pos = self._current_position
+            await self.set_position(pos + 2)
+            time.sleep(1)
+            await self.set_position(pos)
+        else:
+            # 열려 있는 상태
+            pos = self._current_position
+            await self.set_position(pos - 2)
+            time.sleep(1)
+            await self.set_position(pos)
 
 
     async def auto_leveling(self):
-        _LOGGER.info("auto leveling") 
-        await self.hub.leveling(self._current_position)
+        _LOGGER.debug("auto leveling") 
+        if self._group_device == True:
+            await self.hub.leveling_group()
+            _LOGGER.debug("call group leveling")
+        else:
+            await self.hub.leveling(self._current_position)
 
     async def save_top(self):
-        _LOGGER.info("save top") 
+        _LOGGER.debug("save top") 
         self._loop.create_task(self.easyroll_command("save", "ST"))
 
     async def save_bottom(self):
-        _LOGGER.info("save bottom") 
+        _LOGGER.debug("save bottom") 
         self._loop.create_task(self.easyroll_command("save", "SB"))
         
     async def save_m1(self):
-        _LOGGER.info("save m1") 
+        _LOGGER.debug("save m1") 
+        if self._group_device == True:
+            await self.hub.move_m1()
+            return
         self._loop.create_task(self.easyroll_command("save", "SM1"))
 
     async def save_m2(self):
-        _LOGGER.info("save m2") 
+        _LOGGER.debug("save m2") 
+        if self._group_device == True:
+            await self.hub.move_m2()
+            return
         self._loop.create_task(self.easyroll_command("save", "SM2"))
 
     async def save_m3(self):
-        _LOGGER.info("save m3") 
+        _LOGGER.debug("save m3") 
+        if self._group_device == True:
+            await self.hub.move_m3()
+            return
         self._loop.create_task(self.easyroll_command("save", "SM3"))
 
     async def force_up(self):
-        _LOGGER.info("force up") 
+        _LOGGER.debug("force up") 
         self._loop.create_task(self.easyroll_command("force", "FTU"))
 
         self._loop.create_task(self.easyroll_command("lstinfo", ""))
@@ -245,34 +355,46 @@ class Roller:
             callback()
 
     def refresh(self):
-        _LOGGER.debug("refresh!!")
         self._loop.create_task(self.easyroll_command("lstinfo", ""))
-        threading.Timer(self._refresh_interval, self.refresh).start()
+        if self.remove == False and self._group_device == False:
+            _LOGGER.debug("refresh!!, refresh interval : " + str(self._refresh_interval))
+            threading.Timer(self._refresh_interval, self.refresh).start()
         #await threading.Timer(3, self.refresh).start()
 
     def cmd_refresh(self):
         _LOGGER.debug("cmd refresh")
         self._loop.create_task(self.easyroll_command("lstinfo", ""))
-        if self.moving != 0:
+        self._cmd_refresh_count = self._cmd_refresh_count + 1
+        if self._cmd_refresh_count >= 60:
+            self.moving = 0
+        if self.moving != 0 and self._group_device == False:
             threading.Timer(DEFAULT_CMD_REFRESH_INTERVAL, self.cmd_refresh).start()
             
 
     async def easyroll_command(self, mode, command):
+        if self._group_device == True:
+            return
         try:
             if mode == "lstinfo":
                 async with aiohttp.ClientSession() as session:
-                    _LOGGER.error("url : " + self._local_ip)
+                    _LOGGER.debug("url : " + self._local_ip)
                     async with session.get("http://" + self._local_ip + "/" + mode) as response:
                         raw_data = await response.read()
                         data = json.loads(raw_data)
-                        _LOGGER.error("device position : " + str(data["position"]) + ", set position : " + str(self._current_position))
+                        _LOGGER.debug("device position : " + str(data["position"]) + ", set position : " + str(self._current_position))
                         await self.publish_updates(round(float(data["position"])))
 
             else:
                 async with aiohttp.ClientSession() as session:
-                    _LOGGER.error("url : " + self._local_ip)
+                    _LOGGER.debug("url : " + self._local_ip)
                     async with session.post("http://" + self._local_ip + "/action", json = {"mode": mode, "command": command  }) as response:
-                        data = await response.json()
+                        raw_data = await response.read()
+                        data = json.loads(raw_data)
+
+                        if mode == "level":
+                            self.moving = 1
+                        else:
+                            self.moving = 0
                         #_LOGGER.error("response.data() : " + data)
         except Exception as e:
             _LOGGER.error("command timeout : " + str(e))

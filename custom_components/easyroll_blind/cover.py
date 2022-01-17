@@ -1,6 +1,7 @@
 """Platform for sensor integration."""
 from calendar import c
 import logging
+from optparse import Option
 import threading
 # These constants are relevant to the type of entity we are using.
 # See below for how they are used.
@@ -17,7 +18,7 @@ from homeassistant.components.cover import (
 from typing import Optional
 from .const import CONF_REFRESH_INTERVAL, DOMAIN, DEFAULT_REFRESH_INTERVAL
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.components.cover import ENTITY_ID_FORMAT
 from homeassistant.helpers.entity import async_generate_entity_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,15 +61,19 @@ class HelloWorldCover(CoverEntity):
     # imported above, we can tell HA the features that are supported by this entity.
     # If the supported features were dynamic (ie: different depending on the external
     # device it connected to), then this should be function with an @property decorator.
-    supported_features = SUPPORT_SET_POSITION | SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
 
     def __init__(self, hass, roller, name):
         """Initialize the sensor."""
         # Usual setup is done here. Callbacks are added in async_added_to_hass.
         self._roller = roller
         self._name = name
+        self.hass = hass
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, "{}_{}".format(roller.roller_id, name), hass=hass)
         self._device_class = DEVICE_CLASS_BLIND
+        if roller._group_device == True:
+            self._supported_features = SUPPORT_SET_POSITION | SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        else:
+            self._supported_features = SUPPORT_SET_POSITION | SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
 
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
@@ -79,6 +84,7 @@ class HelloWorldCover(CoverEntity):
         # The call back registration is done once this entity is registered with HA
         # (rather than in the __init__)
         self._roller.register_callback(self.async_write_ha_state)
+        self._roller.set_cover_entity_id(self.entity_id)
 
     async def async_will_remove_from_hass(self):
         """Entity being removed from hass."""
@@ -146,6 +152,10 @@ class HelloWorldCover(CoverEntity):
     def device_class(self) -> Optional[str]:
         """Return the device class of the sensor."""
         return self._device_class
+
+    @property
+    def supported_features(self) -> Optional[int]:
+        return self._supported_features
     # The follwing properties are how HA knows the current state of the device.
     # These must return a value from memory, not make a live query to the device/hub
     # etc when called (hence they are properties). For a push based integration,
@@ -157,6 +167,8 @@ class HelloWorldCover(CoverEntity):
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
+        if self._roller._group_device == True:
+            return 50
         return self._roller._current_position
 
     @property
