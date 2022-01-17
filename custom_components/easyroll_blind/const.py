@@ -4,7 +4,7 @@ from typing import DefaultDict
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, PLATFORM_SCHEMA
-
+from homeassistant.config import CONF_NAME
 # This is the internal name of the integration, it should also match the directory
 # name for the integration.
 DOMAIN = "easyroll_blind"
@@ -17,8 +17,12 @@ SEARCH_TIMEOUT = 5
 SEARCH_PERIOD = 120
 
 CONF_AREA_NAME = "area_name"
+CONF_NETWORK_SEARCH = "network_search"
 CONF_REFRESH_INTERVAL = "refresh_interval"
 CONF_USE_SETUP_MODE = "use_setup"
+CONF_HOST = "host"
+CONF_ADD_ANODHER = "add_another"
+CONF_ADD_GROUP_DEVICE = "add_group_device"
 
 SNAME_SAVE_TOP = "Save Top"
 SNAME_SAVE_BOTTOM = "Save Buttom"
@@ -46,4 +50,11 @@ OPTIONS = [
     #(CONF_DEVICE_NAME, "", cv.string),
     (CONF_REFRESH_INTERVAL, DEFAULT_REFRESH_INTERVAL, vol.All(vol.Coerce(int), vol.Range(0, 600))),
     (CONF_USE_SETUP_MODE, False, cv.boolean),
+    (CONF_ADD_GROUP_DEVICE, False, cv.boolean),
 ]
+
+DATA_SCHEMA = vol.Schema( {
+    vol.Required(CONF_AREA_NAME): str,
+    vol.Required(CONF_NETWORK_SEARCH): bool
+    }
+)

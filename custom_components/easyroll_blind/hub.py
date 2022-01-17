@@ -20,17 +20,22 @@ from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.helpers.entity import async_generate_entity_id
+from rfc3986 import is_valid_uri
 import custom_components.easyroll_blind.const as const
 from custom_components.easyroll_blind.const import DEFAULT_CMD_REFRESH_INTERVAL, VERSION
+from custom_components.extend_temperature.sensor import _is_valid_state
 
 _LOGGER = logging.getLogger(__name__)
+
+def _is_valid_state(state) -> bool:
+    return state != STATE_UNKNOWN and state != STATE_UNAVAILABLE and state != None
 
 class Hub:
     """Dummy hub for Hello World example."""
 
     manufacturer = const.DOMAIN
     
-    def __init__(self, hass, area_name, setup_mode, refresh_interval):
+    def __init__(self, hass, area_name, setup_mode, refresh_interval, add_group_device):
         """Init dummy hub."""
         self._hass = hass
         self._area_name = area_name
@@ -38,6 +43,7 @@ class Hub:
         self._setup_mode = setup_mode
         self._refresh_interval = refresh_interval
         self.hass = hass
+        self._add_group_device = add_group_device
 
         self.rollers = [
             #Roller(f"{self._id}_1", f"{self._name} 1", self),
@@ -45,10 +51,14 @@ class Hub:
             #Roller(f"{self._id}_3", f"{self._name} 3", self),
         ]
         self.online = True
+    
 
     async def leveling(self, position):
         for roller in self.rollers:
             if roller._group_device == True:
+                continue
+            entity_state = self.hass.states.get(roller._cover_entity_id)
+            if _is_valid_state(entity_state) == False:
                 continue
             await roller.set_position(position)
 
@@ -60,7 +70,7 @@ class Hub:
                 continue
 
             entity_state = self.hass.states.get(roller._cover_entity_id)
-            if entity_state == STATE_UNKNOWN or entity_state == STATE_UNAVAILABLE or entity_state == None:
+            if _is_valid_state(entity_state) == False:
                 continue
 
             _position = roller._current_position
@@ -205,7 +215,8 @@ class Roller:
         if self._cover_entity_id == None:
             return
         entity_state = self.hass.states.get(self._cover_entity_id)
-        if entity_state == STATE_UNKNOWN or entity_state == STATE_UNAVAILABLE or entity_state == None:
+        
+        if _is_valid_state(entity_state) == False:
             return
 
         self._target_position = position

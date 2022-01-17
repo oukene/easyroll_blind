@@ -10,8 +10,8 @@ from . import hub
 from homeassistant import config_entries, core
 
 from .const import (
-    CONF_AREA_NAME, DEFAULT_REFRESH_INTERVAL, DOMAIN, CONF_REFRESH_INTERVAL, 
-    CONF_USE_SETUP_MODE, ENDPOINT_END, ENDPOINT_START, SEARCH_TIMEOUT
+    CONF_ADD_GROUP_DEVICE, CONF_AREA_NAME, CONF_NETWORK_SEARCH, DEFAULT_REFRESH_INTERVAL, DOMAIN, CONF_REFRESH_INTERVAL, 
+    CONF_USE_SETUP_MODE, ENDPOINT_END, ENDPOINT_START, SEARCH_TIMEOUT, SEARCH_PERIOD, CONF_HOST
 )
 #PLATFORMS = ["switch", "cover", "sensor"]
 PLATFORMS = ["switch", "cover"]
@@ -34,19 +34,37 @@ async def async_setup_entry(
     if use_setup_mode == None:
         use_setup_mode = False
 
+    add_group_device = bool(entry.options.get(CONF_ADD_GROUP_DEVICE))
+    if add_group_device == None:
+        add_group_device = False
+
     refresh_interval = entry.options.get(CONF_REFRESH_INTERVAL)
     if refresh_interval == None:
         refresh_interval = DEFAULT_REFRESH_INTERVAL
 
     area_name = entry.data.get(CONF_AREA_NAME)
-
-    hass.data[DOMAIN][entry.entry_id] = hub.Hub(hass, area_name, use_setup_mode, refresh_interval)
+    hass.data[DOMAIN][entry.entry_id] = hub.Hub(hass, area_name, use_setup_mode, refresh_interval, add_group_device)
     hub2 = hass.data[DOMAIN][entry.entry_id]
-
     use_setup_mode = entry.data.get(CONF_USE_SETUP_MODE)
 
-    loop = asyncio.get_event_loop()
-    loop.create_task(delayed_update(hass, entry, hub2))
+    network_search = entry.data.get(CONF_NETWORK_SEARCH)
+
+    if network_search == False:
+        for host in entry.data[CONF_HOST]:
+            """"""
+            hub2.rollers.append(hub.Roller(area_name, host.get(CONF_HOST) + ":20318", hub2))        
+
+        if len(hub2.rollers) >= 1 and add_group_device == True:
+            hub2.rollers.append(hub.Roller(hub2._area_name, "Group", hub2))
+
+        for component in PLATFORMS:
+            _LOGGER.debug("create component : " + component)
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, component)
+            )
+    else:
+        loop = asyncio.get_event_loop()
+        loop.create_task(delayed_update(hass, entry, hub2))
 
     return True
 
@@ -73,7 +91,7 @@ def get_subnet_ip(ip):
             break
     return subnet
 
-async def get_html(hub2, subnet, i):
+async def get_html(entry, hub2, subnet, i):
     _LOGGER.debug("call get html")
     try:
         async with aiohttp.ClientSession() as session:
@@ -83,7 +101,6 @@ async def get_html(hub2, subnet, i):
             async with await session.get(url, timeout=SEARCH_TIMEOUT) as response:
                 raw_data = await response.read()
                 data = json.loads(raw_data)
-                _LOGGER.debug(data)
                 _LOGGER.debug("response local ip : " + data["local_ip"])
                 hub2.rollers.append(hub.Roller(hub2._area_name, data["local_ip"], hub2))
                 #hub2.rollers.append(hub.Roller(hub2._area_name+"2", data["local_ip"], hub2))
@@ -96,13 +113,13 @@ async def delayed_update(hass, entry, hub2):
     subnet = get_subnet_ip(extract_ip())
 
     await asyncio.gather(
-            *(get_html(hub2, subnet, i) for i in range(ENDPOINT_START, ENDPOINT_END+1))
+            *(get_html(entry, hub2, subnet, i) for i in range(ENDPOINT_START, ENDPOINT_END+1))
         )
     
     # Forward the setup to the sensor platform.
     _LOGGER.debug("Hub Size : " + str(len(hub2.rollers)))
-
-    hub2.rollers.append(hub.Roller(hub2._area_name, "Group", hub2))
+    if len(hub2.rollers) >= 1 and hub2._add_group_device == True:
+        hub2.rollers.append(hub.Roller(hub2._area_name, "Group", hub2))
     
     for component in PLATFORMS:
         _LOGGER.debug("create component : " + component)
@@ -110,7 +127,7 @@ async def delayed_update(hass, entry, hub2):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    threading.Timer(10, await delayed_update(hass, entry, hub2)).start()
+    #threading.Timer(SEARCH_PERIOD, await delayed_update(hass, entry, hub2)).start()
 
 async def options_update_listener(
     hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
