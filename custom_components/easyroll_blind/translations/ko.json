@@ -5,23 +5,24 @@
       "user": {
         "data": {
           "area_name": "\uBE14\uB77C\uC778\uB4DC \uC124\uCE58 \uC601\uC5ED\uC758 \uC774\uB984\uC744 \uC785\uB825\uD558\uC138\uC694",
-          "network_search": "searching network..."
+          "add_group_device": "\uADF8\uB8F9 \uC81C\uC5B4\uC6A9 \uB514\uBC14\uC774\uC2A4 \uCD94\uAC00"
         },
         "description": "\uD655\uC778\uC744 \uB204\uB974\uBA74 \uBE14\uB77C\uC778\uB4DC\uB97C \uCD94\uAC00\uD569\uB2C8\uB2E4.",
         "title": "\uC774\uC9C0\uB864 \uBE14\uB77C\uC778\uB4DC\uB97C \uCD94\uAC00\uD569\uB2C8\uB2E4"
       },
       "hosts": {
         "data": {
-          "add_another": "Add another blind?",
-          "host": "host to the blind",
-          "name": "Name of the blind"
+          "add_another": "\uBE14\uB77C\uC778\uB4DC\uB97C \uB354 \uCD94\uAC00\uD558\uB824\uBA74 \uC120\uD0DD\uD558\uC138\uC694",
+          "host": "\uBE14\uB77C\uC778\uB4DC\uC758 IP \uC8FC\uC18C",
+          "name": "\uBE14\uB77C\uC778\uB4DC\uC758 \uC774\uB984"
         },
-        "description": "Click OK to add the blind.",
-        "title": "Add EasyRoll Blind"
+        "description": "",
+        "title": "\uC774\uC9C0\uB864 \uBE14\uB77C\uC778\uB4DC\uB97C \uCD94\uAC00\uD569\uB2C8\uB2E4"
       }
     },
     "error": {
-      "invalid_host": "The path provided is not valid. Should be in the format `user/repo-name`."
+      "invalid_host": "\uC720\uD6A8\uD55C \uD638\uC2A4\uD2B8 \uC8FC\uC18C\uAC00 \uC544\uB2D9\uB2C8\uB2E4",
+      "no_more_device": "\uB354 \uC774\uC0C1 \uCD94\uAC00\uD560 \uAE30\uAE30\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4"
     },
     "abort": {
     }
@@ -32,9 +33,19 @@
         "title": "\uC774\uC9C0\uB864 \uBE14\uB77C\uC778\uB4DC \uC635\uC158",
         "data": {
           "refresh_interval": "\uC0C1\uD0DC \uAC31\uC2E0 \uC8FC\uAE30(seconds)",
+          "add_another": "\uBE14\uB77C\uC778\uB4DC\uB97C \uCD94\uAC00\uD558\uB824\uBA74 \uC120\uD0DD\uD558\uC138\uC694",
           "use_setup": "\uC124\uC815\uBAA8\uB4DC \uC0AC\uC6A9",
-          "add_group_device": "Add group device"
+          "add_group_device": "\uADF8\uB8F9 \uC81C\uC5B4\uC6A9 \uB514\uBC14\uC774\uC2A4 \uCD94\uAC00"
         }
+      },
+      "hosts": {
+        "data": {
+          "add_another": "\uBE14\uB77C\uC778\uB4DC\uB97C \uB354 \uCD94\uAC00\uD558\uB824\uBA74 \uC120\uD0DD\uD558\uC138\uC694",
+          "host": "\uBE14\uB77C\uC778\uB4DC\uC758 IP \uC8FC\uC18C",
+          "name": "\uBE14\uB77C\uC778\uB4DC\uC758 \uC774\uB984"
+        },
+        "description": "",
+        "title": "\uC774\uC9C0\uB864 \uBE14\uB77C\uC778\uB4DC\uB97C \uCD94\uAC00\uD569\uB2C8\uB2E4"
       }
     }
   }

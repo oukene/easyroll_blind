@@ -82,7 +82,7 @@ class SwitchBase(SwitchEntity):
     def device_info(self):
         """Information about this entity/device."""
         return {
-            "identifiers": {(DOMAIN, self._roller.roller_id)},
+            "identifiers": {(DOMAIN, self._roller._name)},
             # If desired, the name for the device could be different to the entity
             "name": self._roller._name,
             "sw_version": self._roller.firmware_version,
@@ -124,7 +124,6 @@ class CommandSwitch(SwitchBase):
         super().__init__(roller)
         self._name = name
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, "{}_{}".format(roller.roller_id, name), hass=hass)
-
         self.functions ={
         SNAME_MOVE_M1: self._roller.move_m1,
         SNAME_MOVE_M2: self._roller.move_m2,

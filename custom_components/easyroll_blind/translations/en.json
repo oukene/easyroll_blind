@@ -5,23 +5,24 @@
       "user": {
         "data": {
           "area_name": "Enter the name of the blind installation area",
-          "network_search": "searching network..."
+          "add_group_device": "Add device for group control"
         },
         "description": "Click OK to add the blind.",
         "title": "Add EasyRoll Blind"
       },
       "hosts": {
         "data": {
-          "add_another": "Add another blind?",
+          "add_another": "Choose to add more blinds",
           "host": "host to the blind",
           "name": "Name of the blind"
         },
-        "description": "Click OK to add the blind.",
+        "description": "",
         "title": "Add EasyRoll Blind"
       }
     },
     "error": {
-      "invalid_host": "The path provided is not valid. Should be in the format `user/repo-name`."
+      "invalid_host": "select host invalid.",
+      "no_more_device": "There are no more devices to add"
     },
     "abort": {
     }
@@ -32,9 +33,19 @@
         "title": "EasyRoll blind option",
         "data": {
           "refresh_interval": "state update cycle(seconds)",
+          "add_another": "Choose to add blinds",
           "use_setup": "Use setup mode",
-          "add_group_device": "Add group device"
+          "add_group_device": "Add device for group control"
         }
+      },
+      "hosts": {
+        "data": {
+          "add_another": "Choose to add more blinds",
+          "host": "host to the blind",
+          "name": "Name of the blind"
+        },
+        "description": "",
+        "title": "Add EasyRoll Blind"
       }
     }
   }

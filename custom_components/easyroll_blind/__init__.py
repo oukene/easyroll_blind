@@ -10,9 +10,11 @@ from . import hub
 from homeassistant import config_entries, core
 
 from .const import (
-    CONF_ADD_GROUP_DEVICE, CONF_AREA_NAME, CONF_NETWORK_SEARCH, DEFAULT_REFRESH_INTERVAL, DOMAIN, CONF_REFRESH_INTERVAL, 
+    CONF_ADD_GROUP_DEVICE, CONF_AREA_NAME, CONF_DEVICES, DEFAULT_REFRESH_INTERVAL, DEVICE_PORT, DOMAIN, CONF_REFRESH_INTERVAL, 
     CONF_USE_SETUP_MODE, ENDPOINT_END, ENDPOINT_START, SEARCH_TIMEOUT, SEARCH_PERIOD, CONF_HOST
 )
+
+from homeassistant.const import CONF_NAME
 #PLATFORMS = ["switch", "cover", "sensor"]
 PLATFORMS = ["switch", "cover"]
 
@@ -20,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+    hass: core.HomeAssistant, entry: config_entries
 ) -> bool:
     """Set up platform from a ConfigEntry."""
     hass.data.setdefault(DOMAIN, {})
@@ -45,10 +47,21 @@ async def async_setup_entry(
     area_name = entry.data.get(CONF_AREA_NAME)
     hass.data[DOMAIN][entry.entry_id] = hub.Hub(hass, area_name, use_setup_mode, refresh_interval, add_group_device)
     hub2 = hass.data[DOMAIN][entry.entry_id]
-    use_setup_mode = entry.data.get(CONF_USE_SETUP_MODE)
 
-    network_search = entry.data.get(CONF_NETWORK_SEARCH)
+    for host in entry.data[CONF_DEVICES]:
+            """"""
+            hub2.rollers.append(hub.Roller(area_name, host.get(CONF_HOST), DEVICE_PORT, host.get(CONF_NAME), hub2))     
 
+    if add_group_device == True:
+        hub2.rollers.append(hub.Roller(area_name, "0.0.0.0", 0, "GROUP", hub2))
+
+    for component in PLATFORMS:
+        _LOGGER.debug("create component : " + component)
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    """
     if network_search == False:
         for host in entry.data[CONF_HOST]:
             """"""
@@ -65,7 +78,7 @@ async def async_setup_entry(
     else:
         loop = asyncio.get_event_loop()
         loop.create_task(delayed_update(hass, entry, hub2))
-
+    """
     return True
 
 def extract_ip():
@@ -101,7 +114,7 @@ async def get_html(entry, hub2, subnet, i):
             async with await session.get(url, timeout=SEARCH_TIMEOUT) as response:
                 raw_data = await response.read()
                 data = json.loads(raw_data)
-                _LOGGER.debug("response local ip : " + data["local_ip"])
+                #_LOGGER.debug("response local ip : " + data["local_ip"])
                 hub2.rollers.append(hub.Roller(hub2._area_name, data["local_ip"], hub2))
                 #hub2.rollers.append(hub.Roller(hub2._area_name+"2", data["local_ip"], hub2))
     except Exception:

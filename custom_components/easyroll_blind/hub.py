@@ -125,20 +125,23 @@ class Hub:
 class Roller:
     """Dummy roller (device for HA) for Hello World example."""
 
-    def __init__(self, name, local_ip, hub):
+    def __init__(self, area_name, local_ip, port, name, hub):
         """Init dummy roller."""
-        self._id = name + "_" + local_ip
+        if name == "GROUP":
+            self._id = area_name + ":" + name
+            self._group_device = True
+            self._name = self._id
+        else:
+            self._id = name
+            self._group_device = False
+            self._name = name
+
         self.hub = hub
         self.hass = hub._hass
         self._setup_mode = hub._setup_mode
         self._refresh_interval = hub._refresh_interval
-        if local_ip == "Group":
-            self._name = name + "_" + local_ip
-            self._group_device = True
-        else:
-            self._name = local_ip
-            self._group_device = False
         self._local_ip = local_ip
+        self._port = port
         self._callbacks = set()
         self._loop = asyncio.get_event_loop()
         self._target_position = 0
@@ -388,8 +391,8 @@ class Roller:
         try:
             if mode == "lstinfo":
                 async with aiohttp.ClientSession() as session:
-                    _LOGGER.debug("url : " + self._local_ip)
-                    async with session.get("http://" + self._local_ip + "/" + mode) as response:
+                    _LOGGER.debug("url : " + self._local_ip + ":" + str(self._port))
+                    async with session.get("http://" + self._local_ip + ":" + str(self._port) + "/" + mode) as response:
                         raw_data = await response.read()
                         data = json.loads(raw_data)
                         _LOGGER.debug("device position : " + str(data["position"]) + ", set position : " + str(self._current_position))
@@ -397,8 +400,8 @@ class Roller:
 
             else:
                 async with aiohttp.ClientSession() as session:
-                    _LOGGER.debug("url : " + self._local_ip)
-                    async with session.post("http://" + self._local_ip + "/action", json = {"mode": mode, "command": command  }) as response:
+                    _LOGGER.debug("url : " + self._local_ip + ":" + str(self._port))
+                    async with session.post("http://" + self._local_ip + ":" + str(self._port) + "/action", json = {"mode": mode, "command": command  }) as response:
                         raw_data = await response.read()
                         data = json.loads(raw_data)
 
