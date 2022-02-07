@@ -16,7 +16,7 @@ from homeassistant.components.cover import (
 )
 
 from typing import Optional
-from .const import CONF_REFRESH_INTERVAL, DOMAIN, DEFAULT_REFRESH_INTERVAL
+from .const import CONF_REFRESH_INTERVAL, DEFAULT_SEND_PLATFORM_INFO_INTERVAL, DOMAIN, DEFAULT_REFRESH_INTERVAL
 
 from homeassistant.components.cover import ENTITY_ID_FORMAT
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     # to HA. Note these are all added to a list, so async_add_devices can be
     # called just once.
     new_devices = []
-    for roller in hub.rollers:
+    for roller in hub.rollers.values():
         new_devices.append(HelloWorldCover(hass, roller, 'Blind'))
         # new_devices.append(JogCommand(roller, 'job up/down'))
     # If we have any new devices, add them
@@ -46,8 +46,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     if refresh_interval == None:
         refresh_interval = DEFAULT_REFRESH_INTERVAL
 
-    for roller in hub.rollers:
-        threading.Timer(DEFAULT_REFRESH_INTERVAL, roller.refresh).start()
+    for roller in hub.rollers.values():
+        
         _LOGGER.debug("create refresh timer in cover")
 # This entire class could be written to extend a base class to ensure common attributes
 # are kept identical/in sync. It's broken apart here between the Cover and Sensors to
@@ -66,7 +66,7 @@ class HelloWorldCover(CoverEntity):
         """Initialize the sensor."""
         # Usual setup is done here. Callbacks are added in async_added_to_hass.
         self._roller = roller
-        self._name = name
+        self._name = "{} {}".format(roller._name, name)
         self.hass = hass
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, "{}_{}".format(roller.roller_id, name), hass=hass)
         self._device_class = DEVICE_CLASS_BLIND

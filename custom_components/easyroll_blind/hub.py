@@ -5,13 +5,18 @@
 # for more information.
 # This dummy hub always returns 3 rollers.
 import asyncio
+from email import message
+from io import BytesIO
 import random
 import logging
+from turtle import position
 import aiohttp
 import threading
 import json
 import time
 
+from urllib.parse import parse_qs, urlparse
+from http.server import HTTPServer, BaseHTTPRequestHandler
 import requests
 from timeit import default_timer as dt
 
@@ -21,18 +26,54 @@ from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.helpers.entity import async_generate_entity_id
 from rfc3986 import is_valid_uri
+from custom_components.easyroll_blind.__init__ import extract_ip
 import custom_components.easyroll_blind.const as const
-from custom_components.easyroll_blind.const import DEFAULT_CMD_REFRESH_INTERVAL, VERSION
-from custom_components.extend_temperature.sensor import _is_valid_state
+from custom_components.easyroll_blind.const import DEFAULT_CMD_REFRESH_INTERVAL, DEFAULT_REFRESH_INTERVAL, DEFAULT_SEND_PLATFORM_INFO_INTERVAL, VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
 def _is_valid_state(state) -> bool:
     return state != STATE_UNKNOWN and state != STATE_UNAVAILABLE and state != None
 
+class MyHttpServer(HTTPServer):
+    def __init__(self, hub, *args, **kargs):
+        HTTPServer.__init__(self, *args, **kargs)
+        self.hub = hub
+
+class MyHTTPRequestHandler( BaseHTTPRequestHandler ):
+    #def do_GET(self):
+    #    if self.path == "/push-state":
+    #        _LOGGER.debug( 'get방식 요청' )
+
+    def do_POST(self):
+        
+        request = urlparse(self.path)
+        if request.path == "/push-state":
+            
+            content_length = int(self.headers.get('Content-Length'))
+            
+            post_body = self.rfile.read(content_length)
+            body = parse_qs(post_body.decode("utf-8"))
+            
+            if "position" in body:
+                _LOGGER.debug(body["position"][0])
+                
+                try:
+                    #self.server.hub.rollers[self.client_address[0]]._current_position = int(body["position"][0])
+                    self.server.hub.rollers[self.client_address[0]]._loop.create_task(self.server.hub.rollers[self.client_address[0]].publish_updates(int(body["position"][0])))
+                    
+                    message = {"result": "success"}
+
+                    self.send_response(200)
+                    self.send_header("Content-Type","application/json;charset=UTF-8")
+                    self.end_headers()
+                    self.wfile.write(bytes(json.dumps(message), "utf-8"))
+                    
+                except Exception:
+                    """"""
+                
 class Hub:
     """Dummy hub for Hello World example."""
-
     manufacturer = const.DOMAIN
     
     def __init__(self, hass, area_name, setup_mode, refresh_interval, add_group_device):
@@ -45,13 +86,17 @@ class Hub:
         self.hass = hass
         self._add_group_device = add_group_device
 
-        self.rollers = [
+        self.rollers = {}
             #Roller(f"{self._id}_1", f"{self._name} 1", self),
             #Roller(f"{self._id}_2", f"{self._name} 2", self),
             #Roller(f"{self._id}_3", f"{self._name} 3", self),
-        ]
         self.online = True
-    
+        threading.Timer(0, self.start_server).start()
+
+    def start_server(self):
+        httpd = MyHttpServer(self, ("0.0.0.0", 20319), MyHTTPRequestHandler)
+        _LOGGER.debug("start http server")
+        httpd.serve_forever()
 
     async def leveling(self, position):
         for roller in self.rollers:
@@ -161,6 +206,9 @@ class Roller:
 
         self._loop.create_task(self.easyroll_command("lstinfo", ""))
 
+        threading.Timer(DEFAULT_REFRESH_INTERVAL, self.refresh).start()
+        threading.Timer(DEFAULT_SEND_PLATFORM_INFO_INTERVAL, self.send_platform_info).start()
+
     @property
     def roller_id(self):
         """Return ID for roller."""
@@ -227,7 +275,8 @@ class Roller:
         #self.moving = position - 50
         # self._current_position = position
         self._loop.create_task(self.easyroll_command("level", str(100 - position)))
-        threading.Timer(DEFAULT_CMD_REFRESH_INTERVAL, self.cmd_refresh).start()
+        # 여기도 끝나고 나면 풀어줘야 함
+        #threading.Timer(DEFAULT_CMD_REFRESH_INTERVAL, self.cmd_refresh).start()
         #self._loop.create_task(self.easyroll_command("lstinfo", ""))
 
     async def move_m1(self):
@@ -382,8 +431,27 @@ class Roller:
         if self._cmd_refresh_count >= 60:
             self.moving = 0
         if self.moving != 0 and self._group_device == False:
-            threading.Timer(DEFAULT_CMD_REFRESH_INTERVAL, self.cmd_refresh).start()
+            """"""
+            # 이 부분 풀어줘야 함
+            #threading.Timer(DEFAULT_CMD_REFRESH_INTERVAL, self.cmd_refresh).start()
+
+    def send_platform_info(self):
+        self._loop.create_task(self._send_platform_info("homeassistant", self._local_ip, 20319))
+        if self.remove == False and self._group_device == False:
+            threading.Timer(DEFAULT_SEND_PLATFORM_INFO_INTERVAL, self.send_platform_info).start()
+        #await threading.Timer(3, self.refresh).start()
             
+    async def _send_platform_info(self, name, ip, port):
+        try:
+            async with aiohttp.ClientSession() as session:
+                _LOGGER.debug("send platform info url : " + self._local_ip + ":" + str(self._port))
+                _LOGGER.debug("name : %s, ip : %s, port : %d", name, ip, port)
+                async with session.post("http://" + self._local_ip + ":" + str(self._port) + "/platform", json = {"name": name, "ip": ip, "port": str(port) }) as response:
+                    raw_data = await response.read()
+                    data = json.loads(raw_data)
+                    _LOGGER.debug("end send platform info")
+        except Exception as e:
+            _LOGGER.error("command error : " + str(e))
 
     async def easyroll_command(self, mode, command):
         if self._group_device == True:

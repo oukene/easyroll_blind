@@ -29,8 +29,6 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.core import callback
 from homeassistant.config import CONF_NAME
 
-from click import option
-
 from .const import (CONF_ADD_ANODHER, CONF_ADD_GROUP_DEVICE, CONF_AREA_NAME, CONF_DEVICES, CONF_HOST, 
             CONF_USE_SETUP_MODE, DOMAIN, CONF_REFRESH_INTERVAL, SEARCH_TIMEOUT, DEFAULT_REFRESH_INTERVAL,
             ENDPOINT_END, ENDPOINT_START, SNAME_FORCE_DOWN, SNAME_FORCE_UP, SNAME_SAVE_BOTTOM, SNAME_SAVE_M1, SNAME_SAVE_M2, SNAME_SAVE_M3, SNAME_SAVE_TOP)

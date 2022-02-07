@@ -5,6 +5,7 @@ import logging
 import aiohttp
 import socket
 import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from . import hub
 from homeassistant import config_entries, core
@@ -50,10 +51,10 @@ async def async_setup_entry(
 
     for host in entry.data[CONF_DEVICES]:
             """"""
-            hub2.rollers.append(hub.Roller(area_name, host.get(CONF_HOST), DEVICE_PORT, host.get(CONF_NAME), hub2))     
+            hub2.rollers[host.get(CONF_HOST)] = hub.Roller(area_name, host.get(CONF_HOST), DEVICE_PORT, host.get(CONF_NAME), hub2)     
 
     if add_group_device == True:
-        hub2.rollers.append(hub.Roller(area_name, "0.0.0.0", 0, "GROUP", hub2))
+        hub2.rollers["0.0.0.0"] = hub.Roller(area_name, "0.0.0.0", 0, "GROUP", hub2)
 
     for component in PLATFORMS:
         _LOGGER.debug("create component : " + component)
@@ -155,7 +156,7 @@ async def async_unload_entry(
     """Unload a config entry."""
 
     hub = hass.data[DOMAIN][entry.entry_id]
-    for roller in hub.rollers:
+    for roller in hub.rollers.values():
         roller.remove = True
 
     unload_ok = all(

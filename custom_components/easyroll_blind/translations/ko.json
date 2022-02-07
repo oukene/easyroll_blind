@@ -24,10 +24,13 @@
       "invalid_host": "\uC720\uD6A8\uD55C \uD638\uC2A4\uD2B8 \uC8FC\uC18C\uAC00 \uC544\uB2D9\uB2C8\uB2E4",
       "no_more_device": "\uB354 \uC774\uC0C1 \uCD94\uAC00\uD560 \uAE30\uAE30\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4"
     },
-    "abort": {
-    }
+    "abort": {}
   },
   "options": {
+    "error": {
+      "invalid_host": "\uC720\uD6A8\uD55C \uD638\uC2A4\uD2B8 \uC8FC\uC18C\uAC00 \uC544\uB2D9\uB2C8\uB2E4",
+      "no_more_device": "\uB354 \uC774\uC0C1 \uCD94\uAC00\uD560 \uAE30\uAE30\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4"
+    },
     "step": {
       "init": {
         "title": "\uC774\uC9C0\uB864 \uBE14\uB77C\uC778\uB4DC \uC635\uC158",

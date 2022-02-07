@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         use_setup_mode = False
 
     new_devices = []
-    for roller in hub.rollers:
+    for roller in hub.rollers.values():
         new_devices.append(CommandSwitch(hass, roller, SNAME_MOVE_M1))
         new_devices.append(CommandSwitch(hass, roller, SNAME_MOVE_M2))
         new_devices.append(CommandSwitch(hass, roller, SNAME_MOVE_M3))
@@ -122,7 +122,7 @@ class CommandSwitch(SwitchBase):
     def __init__(self, hass, roller, name):
         """Initialize the sensor."""
         super().__init__(roller)
-        self._name = name
+        self._name = "{} {}".format(roller._name, name)
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, "{}_{}".format(roller.roller_id, name), hass=hass)
         self.functions ={
         SNAME_MOVE_M1: self._roller.move_m1,
