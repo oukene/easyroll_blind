@@ -31,6 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 # Note how both entities for each roller sensor (battry and illuminance) are added at
 # the same time to the same list. This way only a single async_add_devices call is
 # required.
+
+
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Add sensors for passed config_entry in HA."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
@@ -40,7 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         use_setup_mode = False
 
     new_devices = []
-    for roller in hub.rollers.values():
+    for roller in hub.rollers:
         new_devices.append(CommandSwitch(hass, roller, SNAME_MOVE_M1))
         new_devices.append(CommandSwitch(hass, roller, SNAME_MOVE_M2))
         new_devices.append(CommandSwitch(hass, roller, SNAME_MOVE_M3))
@@ -78,6 +80,7 @@ class SwitchBase(SwitchEntity):
     # identifiers value matching that used in the cover, but no other information such
     # as name. If name is returned, this entity will then also become a device in the
     # HA UI.
+
     @property
     def device_info(self):
         """Information about this entity/device."""
@@ -95,6 +98,7 @@ class SwitchBase(SwitchEntity):
         return self._state
     # This property is important to let HA know if this entity is online or not.
     # If an entity is offline (return False), the UI will refelect this.
+
     @property
     def available(self) -> bool:
         """Return True if roller and hub is available."""
@@ -122,24 +126,25 @@ class CommandSwitch(SwitchBase):
     def __init__(self, hass, roller, name):
         """Initialize the sensor."""
         super().__init__(roller)
-        self._name = "{} {}".format(roller._name, name)
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, "{}_{}".format(roller.roller_id, name), hass=hass)
-        self.functions ={
-        SNAME_MOVE_M1: self._roller.move_m1,
-        SNAME_MOVE_M2: self._roller.move_m2,
-        SNAME_MOVE_M3: self._roller.move_m3,
-        SNAME_JOG_UP: self._roller.jog_up,
-        SNAME_JOG_DOWN: self._roller.jog_down,
-        SNAME_FIND_ME: self._roller.find_me,
-        SNAME_AUTO_LEVELING: self._roller.auto_leveling,
-        SNAME_SAVE_TOP: self._roller.save_top,
-        SNAME_SAVE_BOTTOM: self._roller.save_bottom,
-        SNAME_SAVE_M1: self._roller.save_m1,
-        SNAME_SAVE_M2: self._roller.save_m2,
-        SNAME_SAVE_M3: self._roller.save_m3,
-        SNAME_FORCE_UP: self._roller.force_up,
-        SNAME_FORCE_DOWN: self._roller.force_down,
-    }
+        self._name = name
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, "{}_{}".format(roller.roller_id, name), hass=hass)
+        self.functions = {
+            SNAME_MOVE_M1: self._roller.move_m1,
+            SNAME_MOVE_M2: self._roller.move_m2,
+            SNAME_MOVE_M3: self._roller.move_m3,
+            SNAME_JOG_UP: self._roller.jog_up,
+            SNAME_JOG_DOWN: self._roller.jog_down,
+            SNAME_FIND_ME: self._roller.find_me,
+            SNAME_AUTO_LEVELING: self._roller.auto_leveling,
+            SNAME_SAVE_TOP: self._roller.save_top,
+            SNAME_SAVE_BOTTOM: self._roller.save_bottom,
+            SNAME_SAVE_M1: self._roller.save_m1,
+            SNAME_SAVE_M2: self._roller.save_m2,
+            SNAME_SAVE_M3: self._roller.save_m3,
+            SNAME_FORCE_UP: self._roller.force_up,
+            SNAME_FORCE_DOWN: self._roller.force_down,
+        }
 
     # As per the sensor, this must be a unique value within this domain. This is done
     # by using the device ID, and appending "_battery"
@@ -159,7 +164,7 @@ class CommandSwitch(SwitchBase):
     # Note this functionality to display addition data on an entity appears to be
     # exclusive to sensors. This information is not shown in the UI for a cover.
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
         return attr
