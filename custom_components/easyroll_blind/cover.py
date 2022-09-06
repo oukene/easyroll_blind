@@ -181,6 +181,14 @@ class HelloWorldCover(CoverEntity):
         """Return if the cover is closed, same as position 0."""
         return self._roller._current_position == 0
 
+    @property
+    def is_opening(self):
+        return self._roller._state == "opening"
+
+    @property
+    def is_closing(self):
+        return self._roller._state == "closing"
+
     #@property
     #def is_closing(self):
     #    """Return if the cover is closing or not."""

@@ -91,7 +91,7 @@ class Hub:
             #Roller(f"{self._id}_2", f"{self._name} 2", self),
             #Roller(f"{self._id}_3", f"{self._name} 3", self),
         self.online = True
-        threading.Timer(0, self.start_server).start()
+        #threading.Timer(0, self.start_server).start()
 
     def start_server(self):
         httpd = MyHttpServer(self, ("0.0.0.0", 20319), MyHTTPRequestHandler)
@@ -403,6 +403,13 @@ class Roller:
     # notified of any state changeds for the relevant device.
     async def publish_updates(self, position):
         """Schedule call all registered callbacks."""
+        if self._current_position > (100 - position):
+            self._state = "closing"
+        elif self._current_position < (100 - position):
+            self._state = "opening"
+        else:
+            self._state = "none"
+            
         self._current_position = 100 - position
 
         if self._target_position == self._current_position:
