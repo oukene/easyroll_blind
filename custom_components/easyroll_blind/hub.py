@@ -5,11 +5,8 @@
 # for more information.
 # This dummy hub always returns 3 rollers.
 import asyncio
-from email import message
-from io import BytesIO
 import random
 import logging
-from turtle import position
 import aiohttp
 import threading
 import json
@@ -24,9 +21,6 @@ from homeassistant.components.cover import DOMAIN, SUPPORT_SET_POSITION
 from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.helpers.entity import async_generate_entity_id
-from rfc3986 import is_valid_uri
-from custom_components.easyroll_blind.__init__ import extract_ip
 import custom_components.easyroll_blind.const as const
 from custom_components.easyroll_blind.const import DEFAULT_CMD_REFRESH_INTERVAL, DEFAULT_REFRESH_INTERVAL, DEFAULT_SEND_PLATFORM_INFO_INTERVAL, VERSION
 
