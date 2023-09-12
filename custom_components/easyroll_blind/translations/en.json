@@ -28,6 +28,10 @@
     }
   },
   "options": {
+    "error": {
+      "invalid_host": "select host invalid.",
+      "no_more_device": "There are no more devices to add"
+    },
     "step": {
       "init": {
         "title": "EasyRoll blind option",

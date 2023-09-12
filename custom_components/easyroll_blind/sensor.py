@@ -29,7 +29,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     hub = hass.data[DOMAIN][config_entry.entry_id]
     _LOGGER.error("create sensor")
     new_devices = []
-    for roller in hub.rollers:
+    for roller in hub.rollers.values():
         new_devices.append(MemorySensor(roller, 0, "M1"))
         new_devices.append(MemorySensor(roller, 1, "M2"))
         new_devices.append(MemorySensor(roller, 2, "M3"))

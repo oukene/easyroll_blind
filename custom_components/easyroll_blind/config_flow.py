@@ -17,74 +17,64 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.entity_registry
 
 from homeassistant.helpers.device_registry import (
-    async_get_registry,
+    async_get,
     async_entries_for_config_entry
 )
 
-from homeassistant.helpers.device_registry import (
-    async_get_registry,
-    async_entries_for_config_entry
-)
+import ipaddress
 from homeassistant import config_entries, core, exceptions
 from homeassistant.core import callback
 from homeassistant.config import CONF_NAME
 
-from click import option
+from homeassistant.components.network import async_get_adapters
+from ipaddress import IPv4Address, IPv6Address, ip_interface
 
 from .const import (CONF_ADD_ANODHER, CONF_ADD_GROUP_DEVICE, CONF_AREA_NAME, CONF_DEVICES, CONF_HOST, 
             CONF_USE_SETUP_MODE, DOMAIN, CONF_REFRESH_INTERVAL, SEARCH_TIMEOUT, DEFAULT_REFRESH_INTERVAL,
             ENDPOINT_END, ENDPOINT_START, SNAME_FORCE_DOWN, SNAME_FORCE_UP, SNAME_SAVE_BOTTOM, SNAME_SAVE_M1, SNAME_SAVE_M2, SNAME_SAVE_M3, SNAME_SAVE_TOP)
 from .hub import Hub
 
+import time
+
 _LOGGER = logging.getLogger(__name__)
 
-def extract_ip():
-    st = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:       
-        st.connect(('10.255.255.255', 1))
-        IP = st.getsockname()[0]
-    except Exception:
-        IP = '127.0.0.1'
-    finally:
-        st.close()
-    return IP
-
-def get_subnet_ip(ip):
-    t = ip.split(".")
-
-    n = 0
-    subnet = ""
-    for i in t:
-        subnet = subnet + i + "."
-        n = n + 1
-        if n == 3:
-            break
-    return subnet
-
-async def get_html(subnet, i, devices):
+async def get_html(ip, devices):
     #_LOGGER.debug("call get html")
     try:
+        time.sleep(0.01)
+        _LOGGER.debug("get_html ip : " + str(ip))
         async with aiohttp.ClientSession() as session:
-            url = "http://" + subnet + str(i) + ":20318/lstinfo"
+            url = "http://" + str(ip) + ":20318/lstinfo"
             #url = "http://192.168.11.120:20318/lstinfo"
-            #_LOGGER.debug("url : " + url)
+            _LOGGER.debug("url : " + url)
             async with await session.get(url, timeout=SEARCH_TIMEOUT) as response:
+                _LOGGER.debug("response : " + str(response))
                 raw_data = await response.read()
                 data = json.loads(raw_data)
-                #_LOGGER.debug("response local ip : " + data["local_ip"])
-                devices.append(subnet + str(i))
+                _LOGGER.debug("response local ip : " + str(data))
+                devices.append(str(ip))
                 #hub2.rollers.append(hub.Roller(hub2._area_name+"2", data["local_ip"], hub2))
-    except Exception:
+    except Exception as e:
         """"""
             
-async def get_available_device():
+async def get_available_device(hass):
     """Publish updates, with a random delay to emulate interaction with device."""
-    subnet = get_subnet_ip(extract_ip())
+    #subnet = get_subnet_ip(extract_ip())
+
+    adapters = await async_get_adapters(hass)
+    for adapter in adapters:
+        if not adapter["enabled"]:
+            continue
+        for ip_info in adapter["ipv4"]:
+            interface = ip_interface(
+                f"{ip_info['address']}/{ip_info['network_prefix']}"
+            )
+    _LOGGER.debug("interface : " + str(interface))
 
     available_devices = []
 
     await asyncio.gather(
-            *(get_html(subnet, i, available_devices) for i in range(ENDPOINT_START, ENDPOINT_END+1))
+            *(get_html(ip, available_devices) for ip in ipaddress.ip_network(interface, strict=False).hosts())
         )
 
     return available_devices
@@ -105,7 +95,6 @@ async def test_connection(host):
         return False
 
 async def validate_input(host):
-
     if len(host) < 3:
         raise InvalidHost
 
@@ -215,6 +204,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         #self.data[CONF_ADD_ANODHER] = config_entry.data[CONF_ADD_ANODHER]
         #self.data[CONF_ADD_GROUP_DEVICE] = config_entry.data[CONF_ADD_GROUP_DEVICE]
         #self.data[CONF_USE_SETUP_MODE] = config_entry.data[CONF_USE_SETUP_MODE]
+        _LOGGER.debug("find network")
+        self.devices = []
+
 
     async def async_step_init(
         self, user_input: Dict[str, Any] = None
@@ -232,14 +224,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         #    _LOGGER.debug("entries : " + e.entity_id)
         # Default value for our multi-select.
         #entity_map = {e.entity_id : e for e in entries}
-        self.devices = await get_available_device()
+
+        if len(self.devices) <= 0:
+            self.devices = await get_available_device(self.hass)
         all_devices = {}
         all_devices_by_host = {}
 
-        entity_registry = await homeassistant.helpers.entity_registry.async_get_registry(self.hass)
+        entity_registry = homeassistant.helpers.entity_registry.async_get(self.hass)
         entities = homeassistant.helpers.entity_registry.async_entries_for_config_entry(entity_registry, self.config_entry.entry_id)
         
-        device_registry = await async_get_registry(self.hass)
+        device_registry = async_get(self.hass)
         devices = async_entries_for_config_entry(device_registry, self.config_entry.entry_id)
 
         for e in entities:
@@ -285,6 +279,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     if all_devices_by_host[key] not in user_input[CONF_DEVICES]:
                         #_LOGGER.debug("add remove device host : %s, id : %d", key, all_devices_by_host[key])
                         remove_devices.append(all_devices_by_host[key])
+                        self.devices.append(key[0])
                         #self.config_entry.data[CONF_DEVICES].remove( { host[CONF_HOST], [e.name for e in devices if e.id == all_devices_by_host[host[CONF_HOST]]] })
                     else:
                         self.data[CONF_DEVICES].append(

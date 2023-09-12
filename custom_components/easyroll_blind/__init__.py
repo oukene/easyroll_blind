@@ -16,10 +16,13 @@ from .const import (
 
 from homeassistant.const import CONF_NAME
 #PLATFORMS = ["switch", "cover", "sensor"]
-PLATFORMS = ["switch", "cover"]
+PLATFORMS = ["button", "cover"]
 
 _LOGGER = logging.getLogger(__name__)
 
+async def update_listener(hass, entry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries
@@ -31,6 +34,8 @@ async def async_setup_entry(
     #unsub_options_update_listener = entry.add_update_listener(options_update_listener)
     # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.
     #hass_data["unsub_options_update_listener"] = unsub_options_update_listener
+    
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     use_setup_mode = bool(entry.options.get(CONF_USE_SETUP_MODE))
     if use_setup_mode == None:

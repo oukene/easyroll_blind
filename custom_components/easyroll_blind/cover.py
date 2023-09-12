@@ -66,7 +66,7 @@ class HelloWorldCover(CoverEntity):
         """Initialize the sensor."""
         # Usual setup is done here. Callbacks are added in async_added_to_hass.
         self._roller = roller
-        self._name = name
+        self._name = "{} {}".format(roller._name, name)
         self.hass = hass
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, "{}_{}".format(roller.roller_id, name), hass=hass)
         self._device_class = DEVICE_CLASS_BLIND
@@ -140,6 +140,11 @@ class HelloWorldCover(CoverEntity):
         """Return the name of the roller."""
         return self._name
 
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._roller._current_position
+
     # This property is important to let HA know if this entity is online or not.
     # If an entity is offline (return False), the UI will refelect this.
     @property
@@ -175,6 +180,14 @@ class HelloWorldCover(CoverEntity):
     def is_closed(self):
         """Return if the cover is closed, same as position 0."""
         return self._roller._current_position == 0
+
+    @property
+    def is_opening(self):
+        return self._roller._state == "opening"
+
+    @property
+    def is_closing(self):
+        return self._roller._state == "closing"
 
     #@property
     #def is_closing(self):
