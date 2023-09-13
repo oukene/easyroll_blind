@@ -28,6 +28,43 @@ _LOGGER = logging.getLogger(__name__)
 
 def _is_valid_state(state) -> bool:
     return state != STATE_UNKNOWN and state != STATE_UNAVAILABLE and state != None
+
+class MyHttpServer(HTTPServer):
+    def __init__(self, hub, *args, **kargs):
+        HTTPServer.__init__(self, *args, **kargs)
+        self.hub = hub
+
+class MyHTTPRequestHandler( BaseHTTPRequestHandler ):
+    #def do_GET(self):
+    #    if self.path == "/push-state":
+    #        _LOGGER.debug( 'get방식 요청' )
+
+    def do_POST(self):
+        
+        request = urlparse(self.path)
+        if request.path == "/push-state":
+            
+            content_length = int(self.headers.get('Content-Length'))
+            
+            post_body = self.rfile.read(content_length)
+            body = parse_qs(post_body.decode("utf-8"))
+            
+            if "position" in body:
+                _LOGGER.debug(body["position"][0])
+                
+                try:
+                    #self.server.hub.rollers[self.client_address[0]]._current_position = int(body["position"][0])
+                    self.server.hub.rollers[self.client_address[0]]._loop.create_task(self.server.hub.rollers[self.client_address[0]].publish_updates(int(body["position"][0])))
+                    
+                    message = {"result": "success"}
+
+                    self.send_response(200)
+                    self.send_header("Content-Type","application/json;charset=UTF-8")
+                    self.end_headers()
+                    self.wfile.write(bytes(json.dumps(message), "utf-8"))
+                    
+                except Exception:
+                    """"""
                 
 class Hub:
     """Dummy hub for Hello World example."""
@@ -49,6 +86,12 @@ class Hub:
             #Roller(f"{self._id}_3", f"{self._name} 3", self),
         ]
         self.online = True
+        #threading.Timer(0, self.start_server).start()
+
+    def start_server(self):
+        httpd = MyHttpServer(self, ("0.0.0.0", 20319), MyHTTPRequestHandler)
+        _LOGGER.debug("start http server")
+        httpd.serve_forever()
 
     async def leveling(self, position):
         for roller in self.rollers:

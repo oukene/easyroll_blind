@@ -2,7 +2,7 @@
   "domain": "easyroll_blind",
   "name": "EasyRoll Blind",
   "config_flow": true,
-  "documentation": "https://github.com/oukene/easyroll_blind",
+  "documentation": "https://www.home-assistant.io/integrations/detailed_hello_world_push",
   "requirements": [],
   "ssdp": [],
   "zeroconf": [],
