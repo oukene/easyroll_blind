@@ -1,9 +1,3 @@
-"""A demonstration 'hub' that connects several devices."""
-# In a real implementation, this would be in an external library that's on PyPI.
-# The PyPI package needs to be included in the `requirements` section of manifest.json
-# See https://developers.home-assistant.io/docs/creating_integration_manifest
-# for more information.
-# This dummy hub always returns 3 rollers.
 import asyncio
 import random
 import logging
@@ -17,7 +11,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import requests
 from timeit import default_timer as dt
 
-from homeassistant.components.cover import DOMAIN, SUPPORT_SET_POSITION
+from homeassistant.components.cover import DOMAIN
 from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT

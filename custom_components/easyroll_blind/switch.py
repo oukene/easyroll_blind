@@ -1,36 +1,13 @@
-"""Platform for sensor integration."""
-# This file shows the setup for the sensors associated with the cover.
-# They are setup in the same way with the call to the async_setup_entry function
-# via HA from the module __init__. Each sensor has a device_class, this tells HA how
-# to display it in the UI (for know types). The unit_of_measurement property tells HA
-# what the unit is, so it can display the correct range. For predefined types (such as
-# battery), the unit_of_measurement should match what's expected.
-from math import trunc
-import random
 import logging
-from unittest import FunctionTestCase
-
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    PERCENTAGE,
-    DEVICE_CLASS_ILLUMINANCE,
-)
 
 from homeassistant.components.switch import (
     SwitchEntity,
 )
 from homeassistant.components.switch import ENTITY_ID_FORMAT
 from homeassistant.helpers.entity import async_generate_entity_id
-from .const import CONF_USE_SETUP_MODE, DOMAIN, SNAME_AUTO_LEVELING, SNAME_FIND_ME, SNAME_FORCE_DOWN, SNAME_FORCE_UP, SNAME_JOG_DOWN, SNAME_JOG_UP, SNAME_MOVE_M1, SNAME_MOVE_M2, SNAME_MOVE_M3, SNAME_SAVE_BOTTOM, SNAME_SAVE_M1, SNAME_SAVE_M2, SNAME_SAVE_M3, SNAME_SAVE_TOP
-
-from homeassistant.const import ATTR_VOLTAGE
+from .const import *
 
 _LOGGER = logging.getLogger(__name__)
-
-# See cover.py for more details.
-# Note how both entities for each roller sensor (battry and illuminance) are added at
-# the same time to the same list. This way only a single async_add_devices call is
-# required.
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
@@ -64,9 +41,6 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         async_add_devices(new_devices)
 
 
-# This base class shows the common properties and methods for a sensor as used in this
-# example. See each sensor for further details about properties and methods that
-# have been overridden.
 class SwitchBase(SwitchEntity):
     """Base representation of a Hello World Sensor."""
 
@@ -76,17 +50,12 @@ class SwitchBase(SwitchEntity):
         """Initialize the sensor."""
         self._roller = roller
         self._state = "off"
-    # To link this entity to the cover device, this property must return an
-    # identifiers value matching that used in the cover, but no other information such
-    # as name. If name is returned, this entity will then also become a device in the
-    # HA UI.
 
     @property
     def device_info(self):
         """Information about this entity/device."""
         return {
             "identifiers": {(DOMAIN, self._roller._name)},
-            # If desired, the name for the device could be different to the entity
             "name": self._roller._name,
             "sw_version": self._roller.firmware_version,
             "model": self._roller.model,
@@ -96,8 +65,6 @@ class SwitchBase(SwitchEntity):
     @property
     def is_on(self):
         return self._state
-    # This property is important to let HA know if this entity is online or not.
-    # If an entity is offline (return False), the UI will refelect this.
 
     @property
     def available(self) -> bool:

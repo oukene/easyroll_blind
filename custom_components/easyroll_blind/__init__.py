@@ -4,15 +4,11 @@ import json
 import logging
 import aiohttp
 import socket
-import threading
 
 from . import hub
 from homeassistant import config_entries, core
 
-from .const import (
-    CONF_ADD_GROUP_DEVICE, CONF_AREA_NAME, CONF_DEVICES, DEFAULT_REFRESH_INTERVAL, DEVICE_PORT, DOMAIN, CONF_REFRESH_INTERVAL, 
-    CONF_USE_SETUP_MODE, ENDPOINT_END, ENDPOINT_START, SEARCH_TIMEOUT, SEARCH_PERIOD, CONF_HOST
-)
+from .const import *
 
 from homeassistant.const import CONF_NAME
 #PLATFORMS = ["switch", "cover", "sensor"]
@@ -30,10 +26,6 @@ async def async_setup_entry(
     """Set up platform from a ConfigEntry."""
     hass.data.setdefault(DOMAIN, {})
     hass_data = dict(entry.data)
-    # Registers update listener to update config entry when options are updated.
-    #unsub_options_update_listener = entry.add_update_listener(options_update_listener)
-    # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.
-    #hass_data["unsub_options_update_listener"] = unsub_options_update_listener
     
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
@@ -124,28 +116,6 @@ async def get_html(entry, hub2, subnet, i):
                 #hub2.rollers.append(hub.Roller(hub2._area_name+"2", data["local_ip"], hub2))
     except Exception:
         """"""
-            
-async def delayed_update(hass, entry, hub2):
-    """Publish updates, with a random delay to emulate interaction with device."""
-    _LOGGER.debug("call delayed update")
-    subnet = get_subnet_ip(extract_ip())
-
-    await asyncio.gather(
-            *(get_html(entry, hub2, subnet, i) for i in range(ENDPOINT_START, ENDPOINT_END+1))
-        )
-    
-    # Forward the setup to the sensor platform.
-    _LOGGER.debug("Hub Size : " + str(len(hub2.rollers)))
-    if len(hub2.rollers) >= 1 and hub2._add_group_device == True:
-        hub2.rollers.append(hub.Roller(hub2._area_name, "Group", hub2))
-    
-    for component in PLATFORMS:
-        _LOGGER.debug("create component : " + component)
-        await hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
-
-    #threading.Timer(SEARCH_PERIOD, await delayed_update(hass, entry, hub2)).start()
 
 async def options_update_listener(
     hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry

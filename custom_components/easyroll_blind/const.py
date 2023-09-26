@@ -1,17 +1,7 @@
 TEST = False
 
-from typing import DefaultDict
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, PLATFORM_SCHEMA
-from homeassistant.config import CONF_NAME
-# This is the internal name of the integration, it should also match the directory
-# name for the integration.
 DOMAIN = "easyroll_blind"
-VERSION = "1.0.0"
-
-ENDPOINT_START = 1
-ENDPOINT_END = 254
+VERSION = "1.0.1"
 
 SEARCH_TIMEOUT = 1 if TEST else 10
 SEARCH_PERIOD = 120
