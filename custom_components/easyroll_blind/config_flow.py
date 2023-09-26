@@ -10,6 +10,7 @@ from markupsafe import string
 import voluptuous as vol
 import socket
 from typing import Any, Dict, Optional
+from datetime import datetime
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -31,7 +32,7 @@ from ipaddress import IPv4Address, IPv6Address, ip_interface
 
 from .const import (CONF_ADD_ANODHER, CONF_ADD_GROUP_DEVICE, CONF_AREA_NAME, CONF_DEVICES, CONF_HOST, 
             CONF_USE_SETUP_MODE, DOMAIN, CONF_REFRESH_INTERVAL, SEARCH_TIMEOUT, DEFAULT_REFRESH_INTERVAL,
-            ENDPOINT_END, ENDPOINT_START, SNAME_FORCE_DOWN, SNAME_FORCE_UP, SNAME_SAVE_BOTTOM, SNAME_SAVE_M1, SNAME_SAVE_M2, SNAME_SAVE_M3, SNAME_SAVE_TOP)
+            ENDPOINT_END, ENDPOINT_START, SNAME_FORCE_DOWN, SNAME_FORCE_UP, SNAME_SAVE_BOTTOM, SNAME_SAVE_M1, SNAME_SAVE_M2, SNAME_SAVE_M3, SNAME_SAVE_TOP, TEST)
 from .hub import Hub
 
 import time
@@ -41,7 +42,6 @@ _LOGGER = logging.getLogger(__name__)
 async def get_html(ip, devices):
     #_LOGGER.debug("call get html")
     try:
-        time.sleep(0.01)
         _LOGGER.debug("get_html ip : " + str(ip))
         async with aiohttp.ClientSession() as session:
             url = "http://" + str(ip) + ":20318/lstinfo"
@@ -73,8 +73,21 @@ async def get_available_device(hass):
 
     available_devices = []
 
-    await asyncio.gather(
+    if TEST:
+        hosts = []
+        i = 0
+        while i <= 254:
+            hosts.append("192.168.0." + str(i))
+            i=i+1
+
+    if TEST:
+        await asyncio.gather(
+                *(get_html(ip, available_devices) for ip in hosts)
+            )
+    else:
+        await asyncio.gather(
             *(get_html(ip, available_devices) for ip in ipaddress.ip_network(interface, strict=False).hosts())
+            * (get_html(ip, available_devices) for ip in hosts)
         )
 
     return available_devices
@@ -166,8 +179,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # If user ticked the box show this form again so they can add an
                 # additional repo.
                 if user_input.get(CONF_ADD_ANODHER, False):
-                    self.devices.remove(user_input[CONF_HOST])
-                    if len(self.devices) <= 0:
+                    self.available_devices.remove(user_input[CONF_HOST])
+                    if len(self.available_devices) <= 0:
                         return self.async_create_entry(title=self.data[CONF_AREA_NAME], data=self.data)
                     else:
                         return await self.async_step_hosts()
@@ -206,6 +219,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         #self.data[CONF_USE_SETUP_MODE] = config_entry.data[CONF_USE_SETUP_MODE]
         _LOGGER.debug("find network")
         self.devices = []
+        self._searched = False
 
 
     async def async_step_init(
@@ -225,8 +239,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         # Default value for our multi-select.
         #entity_map = {e.entity_id : e for e in entries}
 
-        if len(self.devices) <= 0:
-            self.devices = await get_available_device(self.hass)
+        if not self._searched:
+            self.available_devices = await get_available_device(self.hass)
+            self._searched = True
         all_devices = {}
         all_devices_by_host = {}
 
@@ -251,14 +266,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     all_devices[d.id] = '{} - {}'.format(name, host[CONF_HOST])
                     all_devices_by_host[ (host[CONF_HOST], host[CONF_NAME] ) ] = d.id
                     try:
-                        self.devices.remove(host[CONF_HOST])
+                        self.available_devices.remove(host[CONF_HOST])
                     except Exception:
                         """"""
                     break
 
         if user_input is not None:
             if user_input.get(CONF_ADD_ANODHER, False):
-                if len(self.devices) <= 0:
+                if len(self.available_devices) <= 0:
                     errors["base"] = "no_more_device"
 
             if not errors:
@@ -267,19 +282,27 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 # remove devices
                 self.data[CONF_DEVICES].clear()
                 remove_devices = []
+                remove_entities = set()
                 self.data[CONF_ADD_GROUP_DEVICE] = user_input[CONF_ADD_GROUP_DEVICE]
                 self.data[CONF_USE_SETUP_MODE] = user_input[CONF_USE_SETUP_MODE]
                 self.data[CONF_REFRESH_INTERVAL] = user_input[CONF_REFRESH_INTERVAL]
                 if user_input[CONF_ADD_GROUP_DEVICE] == False:
                     for d in devices:
                         if d.name == self.data[CONF_AREA_NAME] + ":GROUP":
+                            for e in entities:
+                                if e.device_id == d.id:
+                                    remove_entities.add(e.entity_id)
+                                    #entity_registry.async_remove(e.entity_id)
                             remove_devices.append(d.id)
 
                 for key in all_devices_by_host:
                     if all_devices_by_host[key] not in user_input[CONF_DEVICES]:
                         #_LOGGER.debug("add remove device host : %s, id : %d", key, all_devices_by_host[key])
+                        for e in entities:
+                            if e.device_id == all_devices_by_host[key]:
+                                remove_entities.add(e.entity_id)
                         remove_devices.append(all_devices_by_host[key])
-                        self.devices.append(key[0])
+                        self.available_devices.append(key[0])
                         #self.config_entry.data[CONF_DEVICES].remove( { host[CONF_HOST], [e.name for e in devices if e.id == all_devices_by_host[host[CONF_HOST]]] })
                     else:
                         self.data[CONF_DEVICES].append(
@@ -289,16 +312,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             }
                         )
 
-                for device_id in remove_devices:
-                    #_LOGGER.debug("remove device device id : %d", str(device_id))
-                    device_registry.async_remove_device(device_id)
-
                 # 설정용 entity들 삭제
                 if user_input[CONF_USE_SETUP_MODE] == False:
                     for e in entities:
                         if e.original_name == SNAME_SAVE_TOP or e.original_name == SNAME_SAVE_BOTTOM or e.original_name == SNAME_SAVE_M1 or e.original_name == SNAME_SAVE_M2 \
-                            or e.original_name == SNAME_SAVE_M3 or e.original_name == SNAME_FORCE_DOWN or e.original_name == SNAME_FORCE_UP:
-                            entity_registry.async_remove(e.entity_id)
+                                or e.original_name == SNAME_SAVE_M3 or e.original_name == SNAME_FORCE_DOWN or e.original_name == SNAME_FORCE_UP:
+                            if e.entity_id not in remove_entities:
+                                remove_entities.add(e.entity_id)
+
+                for entity_id in remove_entities:
+                    entity_registry.async_remove(entity_id)
+
+                for device_id in remove_devices:
+                    #_LOGGER.debug("remove device device id : %d", str(device_id))
+                    device_registry.async_remove_device(device_id)
                 
                 if user_input.get(CONF_ADD_ANODHER, False):
                     #if len(self.devices) <= 0:
@@ -307,6 +334,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     return await self.async_step_hosts()
 
                 # User is done adding repos, create the config entry.
+                self.data["modifydatetime"] = datetime.now()
                 return self.async_create_entry(title=self.data[CONF_AREA_NAME], data=self.data)
 
         options_schema = vol.Schema(
@@ -348,9 +376,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
                 # If user ticked the box show this form again so they can add an
                 # additional repo.
+                self.data["modifydatetime"] = datetime.now()
                 if user_input.get(CONF_ADD_ANODHER, False):
-                    self.devices.remove(user_input[CONF_HOST])
-                    if len(self.devices) <= 0:
+                    self.available_devices.remove(user_input[CONF_HOST])
+                    if len(self.available_devices) <= 0:
                         return self.async_create_entry(title=self.data[CONF_AREA_NAME], data=self.data)
                     else:
                         return await self.async_step_hosts()
@@ -361,7 +390,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="hosts", 
             data_schema=vol.Schema(
                     {
-                        vol.Required(CONF_HOST, default=None): vol.In(self.devices),
+                        vol.Required(CONF_HOST, default=None): vol.In(self.available_devices),
                         vol.Optional(CONF_NAME): cv.string,
                         vol.Optional(CONF_ADD_ANODHER): cv.boolean,
                     }

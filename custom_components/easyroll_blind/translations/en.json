@@ -1,5 +1,5 @@
 {
-  "title": "EasyRoll Blind",
+  "title": "EasyRoll Smart Blind",
   "config": {
     "step": {
       "user": {
@@ -8,7 +8,7 @@
           "add_group_device": "Add device for group control"
         },
         "description": "Click OK to add the blind.",
-        "title": "Add EasyRoll Blind"
+        "title": "Add EasyRoll Smart Blind"
       },
       "hosts": {
         "data": {
@@ -17,7 +17,7 @@
           "name": "Name of the blind"
         },
         "description": "",
-        "title": "Add EasyRoll Blind"
+        "title": "Add EasyRoll Smart Blind"
       }
     },
     "error": {
@@ -34,7 +34,7 @@
     },
     "step": {
       "init": {
-        "title": "EasyRoll blind option",
+        "title": "EasyRoll Smart blind option",
         "data": {
           "refresh_interval": "state update cycle(seconds)",
           "add_another": "Choose to add blinds",
@@ -49,7 +49,7 @@
           "name": "Name of the blind"
         },
         "description": "",
-        "title": "Add EasyRoll Blind"
+        "title": "Add EasyRoll Smart Blind"
       }
     }
   }

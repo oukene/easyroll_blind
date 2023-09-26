@@ -1,5 +1,5 @@
-"""Constants for the Detailed Hello World Push integration."""
-"""Constants for the Detailed Hello World Push integration."""
+TEST = True
+
 from typing import DefaultDict
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
@@ -13,7 +13,7 @@ VERSION = "1.0.0"
 ENDPOINT_START = 1
 ENDPOINT_END = 254
 
-SEARCH_TIMEOUT = 10
+SEARCH_TIMEOUT = 1 if TEST else 10
 SEARCH_PERIOD = 120
 
 DEVICE_PORT=20318
