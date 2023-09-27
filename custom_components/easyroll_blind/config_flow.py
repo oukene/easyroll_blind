@@ -76,7 +76,6 @@ async def get_available_device(hass):
     else:
         await asyncio.gather(
             *(get_html(ip, available_devices) for ip in ipaddress.ip_network(interface, strict=False).hosts())
-            * (get_html(ip, available_devices) for ip in hosts)
         )
 
     return available_devices
