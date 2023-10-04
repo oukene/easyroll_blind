@@ -9,6 +9,7 @@ from .const import *
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Add sensors for passed config_entry in HA."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
@@ -38,6 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             new_devices.append(CommandButton(hass, roller, SNAME_FORCE_DOWN))
     if new_devices:
         async_add_devices(new_devices)
+
 
 class ButtonBase(ButtonEntity):
     """Base representation of a Hello World Sensor."""
@@ -97,6 +99,10 @@ class CommandButton(ButtonBase):
         }
 
     @property
+    def has_entity_name(self):
+        return True
+
+    @property
     def unique_id(self):
         """Return Unique ID string."""
         return f"{self._roller.roller_id}_{self._name}"
@@ -110,4 +116,3 @@ class CommandButton(ButtonBase):
         self._roller.moving = 0
         func = self.functions[self._name]
         await func()
-        

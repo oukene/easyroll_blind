@@ -9,6 +9,10 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
     DEVICE_CLASS_BLIND,
+    STATE_OPEN,
+    STATE_CLOSED,
+    STATE_OPENING,
+    STATE_CLOSING,
     CoverEntity,
 )
 
@@ -19,6 +23,7 @@ from homeassistant.components.cover import ENTITY_ID_FORMAT
 from homeassistant.helpers.entity import async_generate_entity_id
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     hub = hass.data[DOMAIN][config_entry.entry_id]
@@ -38,6 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         threading.Timer(DEFAULT_REFRESH_INTERVAL, roller.refresh).start()
         _LOGGER.debug("create refresh timer in cover")
 
+
 class HelloWorldCover(CoverEntity):
     """Representation of a dummy Cover."""
 
@@ -47,9 +53,11 @@ class HelloWorldCover(CoverEntity):
         """Initialize the sensor."""
         # Usual setup is done here. Callbacks are added in async_added_to_hass.
         self._roller = roller
-        self._name = "{} {}".format(roller._name, name)
+        # self._name = "{} {}".format(roller._name, name)
+        self._name = name
         self.hass = hass
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, "{}_{}".format(roller.roller_id, name), hass=hass)
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, "{}_{}".format(roller.roller_id, name), hass=hass)
         self._device_class = DEVICE_CLASS_BLIND
         if roller._group_device == True:
             self._supported_features = SUPPORT_SET_POSITION | SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
@@ -80,6 +88,10 @@ class HelloWorldCover(CoverEntity):
         }
 
     @property
+    def has_entity_name(self):
+        return True
+
+    @property
     def name(self):
         """Return the name of the roller."""
         return self._name
@@ -87,12 +99,13 @@ class HelloWorldCover(CoverEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._roller._current_position
+        return STATE_CLOSED if self._roller._current_position < 100 else STATE_OPEN
+        #return self._roller._current_position
 
     @property
     def available(self) -> bool:
         """Return True if roller and hub is available."""
-        #return self._roller.online and self._roller.hub.online
+        # return self._roller.online and self._roller.hub.online
         return True
 
     @property
@@ -118,19 +131,19 @@ class HelloWorldCover(CoverEntity):
 
     @property
     def is_opening(self):
-        return self._roller._state == "opening"
+        return self._roller._state == STATE_OPENING
 
     @property
     def is_closing(self):
-        return self._roller._state == "closing"
+        return self._roller._state == STATE_CLOSING
 
-    #@property
-    #def is_closing(self):
+    # @property
+    # def is_closing(self):
     #    """Return if the cover is closing or not."""
     #    return self._roller._target_position < self._roller._current_position
 
-    #@property
-    #def is_opening(self):
+    # @property
+    # def is_opening(self):
     #    """Return if the cover is opening or not."""
     #    return self._roller._target_position > self._roller._current_position
 
