@@ -15,6 +15,7 @@ CONF_DEVICES = "conf_devices"
 CONF_HOST = "host"
 CONF_ADD_ANODHER = "add_another"
 CONF_ADD_GROUP_DEVICE = "add_group_device"
+CONF_AUTO_SEARCH = "auto_search"
 
 SNAME_SAVE_TOP = "Save Top"
 SNAME_SAVE_BOTTOM = "Save Buttom"

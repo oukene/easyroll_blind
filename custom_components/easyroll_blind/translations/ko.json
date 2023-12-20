@@ -1,55 +1,61 @@
 {
-  "title": "\uc774\uc9c0\ub864\u0020\uc2a4\ub9c8\ud2b8\u0020\ube14\ub77c\uc778\ub4dc",
-  "config": {
-    "step": {
-      "user": {
-        "data": {
-          "area_name": "\uBE14\uB77C\uC778\uB4DC \uC124\uCE58 \uC601\uC5ED\uC758 \uC774\uB984\uC744 \uC785\uB825\uD558\uC138\uC694",
-          "add_group_device": "\uADF8\uB8F9 \uC81C\uC5B4\uC6A9 \uB514\uBC14\uC774\uC2A4 \uCD94\uAC00"
+    "title": "\uc774\uc9c0\ub864 \uc2a4\ub9c8\ud2b8 \ube14\ub77c\uc778\ub4dc",
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "area_name": "\ube14\ub77c\uc778\ub4dc \uc124\uce58 \uc601\uc5ed\uc758 \uc774\ub984\uc744 \uc785\ub825\ud558\uc138\uc694",
+                    "add_group_device": "\uadf8\ub8f9 \uc81c\uc5b4\uc6a9 \ub514\ubc14\uc774\uc2a4 \ucd94\uac00"
+                },
+                "description": "\ud655\uc778\uc744 \ub204\ub974\uba74 \ube14\ub77c\uc778\ub4dc\ub97c \ucd94\uac00\ud569\ub2c8\ub2e4.",
+                "title": "\uc774\uc9c0\ub864 \uc2a4\ub9c8\ud2b8 \ube14\ub77c\uc778\ub4dc\ub97c \ucd94\uac00\ud569\ub2c8\ub2e4"
+            },
+            "hosts": {
+                "data": {
+                    "add_another": "\ube14\ub77c\uc778\ub4dc\ub97c \ub354 \ucd94\uac00\ud558\ub824\uba74 \uc120\ud0dd\ud558\uc138\uc694",
+                    "host": "\ube14\ub77c\uc778\ub4dc\uc758 IP \uc8fc\uc18c",
+                    "name": "\ube14\ub77c\uc778\ub4dc\uc758 \uc774\ub984"
+                },
+                "description": "",
+                "title": "\uc774\uc9c0\ub864 \uc2a4\ub9c8\ud2b8 \ube14\ub77c\uc778\ub4dc\ub97c \ucd94\uac00\ud569\ub2c8\ub2e4"
+            }
         },
-        "description": "\uD655\uC778\uC744 \uB204\uB974\uBA74 \uBE14\uB77C\uC778\uB4DC\uB97C \uCD94\uAC00\uD569\uB2C8\uB2E4.",
-        "title": "\uc774\uc9c0\ub864\u0020\uc2a4\ub9c8\ud2b8\u0020\ube14\ub77c\uc778\ub4dc\ub97c\u0020\ucd94\uac00\ud569\ub2c8\ub2e4"
-      },
-      "hosts": {
-        "data": {
-          "add_another": "\uBE14\uB77C\uC778\uB4DC\uB97C \uB354 \uCD94\uAC00\uD558\uB824\uBA74 \uC120\uD0DD\uD558\uC138\uC694",
-          "host": "\uBE14\uB77C\uC778\uB4DC\uC758 IP \uC8FC\uC18C",
-          "name": "\uBE14\uB77C\uC778\uB4DC\uC758 \uC774\uB984"
+        "error": {
+            "invalid_host": "\uc720\ud6a8\ud55c \ud638\uc2a4\ud2b8 \uc8fc\uc18c\uac00 \uc544\ub2d9\ub2c8\ub2e4",
+            "no_more_device": "\ub354 \uc774\uc0c1 \ucd94\uac00\ud560 \uae30\uae30\uac00 \uc5c6\uc2b5\ub2c8\ub2e4"
         },
-        "description": "",
-        "title": "\uc774\uc9c0\ub864\u0020\uc2a4\ub9c8\ud2b8\u0020\ube14\ub77c\uc778\ub4dc\ub97c\u0020\ucd94\uac00\ud569\ub2c8\ub2e4"
-      }
+        "abort": {}
     },
-    "error": {
-      "invalid_host": "\uC720\uD6A8\uD55C \uD638\uC2A4\uD2B8 \uC8FC\uC18C\uAC00 \uC544\uB2D9\uB2C8\uB2E4",
-      "no_more_device": "\uB354 \uC774\uC0C1 \uCD94\uAC00\uD560 \uAE30\uAE30\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4"
-    },
-    "abort": {}
-  },
-  "options": {
-    "error": {
-      "invalid_host": "\uC720\uD6A8\uD55C \uD638\uC2A4\uD2B8 \uC8FC\uC18C\uAC00 \uC544\uB2D9\uB2C8\uB2E4",
-      "no_more_device": "\uB354 \uC774\uC0C1 \uCD94\uAC00\uD560 \uAE30\uAE30\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4"
-    },
-    "step": {
-      "init": {
-        "title": "\uc774\uc9c0\ub864\u0020\uc2a4\ub9c8\ud2b8\u0020\ube14\ub77c\uc778\ub4dc\u0020\uc635\uc158",
-        "data": {
-          "refresh_interval": "\uC0C1\uD0DC \uAC31\uC2E0 \uC8FC\uAE30(seconds)",
-          "add_another": "\uBE14\uB77C\uC778\uB4DC\uB97C \uCD94\uAC00\uD558\uB824\uBA74 \uC120\uD0DD\uD558\uC138\uC694",
-          "use_setup": "\uC124\uC815\uBAA8\uB4DC \uC0AC\uC6A9",
-          "add_group_device": "\uADF8\uB8F9 \uC81C\uC5B4\uC6A9 \uB514\uBC14\uC774\uC2A4 \uCD94\uAC00"
+    "options": {
+        "error": {
+            "invalid_host": "\uc720\ud6a8\ud55c \ud638\uc2a4\ud2b8 \uc8fc\uc18c\uac00 \uc544\ub2d9\ub2c8\ub2e4",
+            "no_more_device": "\ub354 \uc774\uc0c1 \ucd94\uac00\ud560 \uae30\uae30\uac00 \uc5c6\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "init": {
+                "title": "\uc774\uc9c0\ub864 \uc2a4\ub9c8\ud2b8 \ube14\ub77c\uc778\ub4dc \uac80\uc0c9 \uc635\uc158",
+                "data": {
+                    "auto_search": "\ube14\ub77c\uc778\ub4dc \uc790\ub3d9 \uac80\uc0c9\uc744 \ud65c\uc131\ud654 \ud569\ub2c8\ub2e4"
+                }
+            },
+            "search": {
+                "title": "\uc774\uc9c0\ub864 \uc2a4\ub9c8\ud2b8 \ube14\ub77c\uc778\ub4dc \uc635\uc158",
+                "data": {
+                    "refresh_interval": "\uc0c1\ud0dc \uac31\uc2e0 \uc8fc\uae30(seconds)",
+                    "add_another": "\ube14\ub77c\uc778\ub4dc\ub97c \ucd94\uac00\ud558\ub824\uba74 \uc120\ud0dd\ud558\uc138\uc694",
+                    "use_setup": "\uc124\uc815\ubaa8\ub4dc \uc0ac\uc6a9",
+                    "add_group_device": "\uadf8\ub8f9 \uc81c\uc5b4\uc6a9 \ub514\ubc14\uc774\uc2a4 \ucd94\uac00"
+                }
+            },
+            "hosts": {
+                "data": {
+                    "add_another": "\ube14\ub77c\uc778\ub4dc\ub97c \ub354 \ucd94\uac00\ud558\ub824\uba74 \uc120\ud0dd\ud558\uc138\uc694",
+                    "host": "\ube14\ub77c\uc778\ub4dc\uc758 IP \uc8fc\uc18c",
+                    "name": "\ube14\ub77c\uc778\ub4dc\uc758 \uc774\ub984"
+                },
+                "description": "",
+                "title": "\uc774\uc9c0\ub864 \uc2a4\ub9c8\ud2b8 \ube14\ub77c\uc778\ub4dc\ub97c \ucd94\uac00\ud569\ub2c8\ub2e4"
+            }
         }
-      },
-      "hosts": {
-        "data": {
-          "add_another": "\uBE14\uB77C\uC778\uB4DC\uB97C \uB354 \uCD94\uAC00\uD558\uB824\uBA74 \uC120\uD0DD\uD558\uC138\uC694",
-          "host": "\uBE14\uB77C\uC778\uB4DC\uC758 IP \uC8FC\uC18C",
-          "name": "\uBE14\uB77C\uC778\uB4DC\uC758 \uC774\uB984"
-        },
-        "description": "",
-        "title": "\uc774\uc9c0\ub864\u0020\uc2a4\ub9c8\ud2b8\u0020\ube14\ub77c\uc778\ub4dc\ub97c\u0020\ucd94\uac00\ud569\ub2c8\ub2e4"
-      }
     }
-  }
 }

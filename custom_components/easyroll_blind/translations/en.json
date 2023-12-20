@@ -1,56 +1,61 @@
 {
-  "title": "EasyRoll Smart Blind",
-  "config": {
-    "step": {
-      "user": {
-        "data": {
-          "area_name": "Enter the name of the blind installation area",
-          "add_group_device": "Add device for group control"
+    "title": "EasyRoll Smart Blind",
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "area_name": "Enter the name of the blind installation area",
+                    "add_group_device": "Add device for group control"
+                },
+                "description": "Click OK to add the blind.",
+                "title": "Add EasyRoll Smart Blind"
+            },
+            "hosts": {
+                "data": {
+                    "add_another": "Choose to add more blinds",
+                    "host": "host to the blind",
+                    "name": "Name of the blind"
+                },
+                "description": "",
+                "title": "Add EasyRoll Smart Blind"
+            }
         },
-        "description": "Click OK to add the blind.",
-        "title": "Add EasyRoll Smart Blind"
-      },
-      "hosts": {
-        "data": {
-          "add_another": "Choose to add more blinds",
-          "host": "host to the blind",
-          "name": "Name of the blind"
+        "error": {
+            "invalid_host": "select host invalid.",
+            "no_more_device": "There are no more devices to add"
         },
-        "description": "",
-        "title": "Add EasyRoll Smart Blind"
-      }
+        "abort": {}
     },
-    "error": {
-      "invalid_host": "select host invalid.",
-      "no_more_device": "There are no more devices to add"
-    },
-    "abort": {
-    }
-  },
-  "options": {
-    "error": {
-      "invalid_host": "select host invalid.",
-      "no_more_device": "There are no more devices to add"
-    },
-    "step": {
-      "init": {
-        "title": "EasyRoll Smart blind option",
-        "data": {
-          "refresh_interval": "state update cycle(seconds)",
-          "add_another": "Choose to add blinds",
-          "use_setup": "Use setup mode",
-          "add_group_device": "Add device for group control"
+    "options": {
+        "error": {
+            "invalid_host": "select host invalid.",
+            "no_more_device": "There are no more devices to add"
+        },
+        "step": {
+            "init": {
+                "title": "EasyRoll Smart blind search option",
+                "data": {
+                    "auto_search": "enable blind auto search"
+                }
+            },
+            "search": {
+                "title": "EasyRoll Smart blind option",
+                "data": {
+                    "refresh_interval": "state update cycle(seconds)",
+                    "add_another": "Choose to add blinds",
+                    "use_setup": "Use setup mode",
+                    "add_group_device": "Add device for group control"
+                }
+            },
+            "hosts": {
+                "data": {
+                    "add_another": "Choose to add more blinds",
+                    "host": "host to the blind",
+                    "name": "Name of the blind"
+                },
+                "description": "",
+                "title": "Add EasyRoll Smart Blind"
+            }
         }
-      },
-      "hosts": {
-        "data": {
-          "add_another": "Choose to add more blinds",
-          "host": "host to the blind",
-          "name": "Name of the blind"
-        },
-        "description": "",
-        "title": "Add EasyRoll Smart Blind"
-      }
     }
-  }
 }

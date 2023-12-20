@@ -20,6 +20,7 @@ import ipaddress
 from homeassistant import config_entries, exceptions
 from homeassistant.core import callback
 from homeassistant.config import CONF_NAME
+from homeassistant.helpers import selector
 
 from homeassistant.components.network import async_get_adapters
 from ipaddress import ip_interface
@@ -95,13 +96,14 @@ async def test_connection(host):
     except Exception:
         return False
 
-async def validate_input(host):
+async def validate_input(host, autosearch):
     if len(host) < 3:
         raise InvalidHost
 
-    result = await test_connection(host)
-    if False == result:
-        raise CannotConnect
+    if autosearch:
+        result = await test_connection(host)
+        if False == result:
+            raise CannotConnect
 
     return {"title": host}
 
@@ -144,47 +146,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             })
             , errors=errors
         )
-
-    async def async_step_hosts(self, user_input: Optional[Dict[str, Any]] = None):
-        """Second step in config flow to add a repo to watch."""
-        errors: Dict[str, str] = {}
-        if user_input is not None:
-            try:
-                await validate_input(
-                    user_input[CONF_HOST]
-                )
-            except ValueError:
-                errors["base"] = "invalid_host"
-
-            if not errors:
-                # Input is valid, set data.
-                self.data[CONF_DEVICES].append(
-                    {
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_NAME: user_input.get(CONF_NAME, user_input[CONF_HOST]),
-                    }
-                )
-                # If user ticked the box show this form again so they can add an
-                # additional repo.
-                if user_input.get(CONF_ADD_ANODHER, False):
-                    self.available_devices.remove(user_input[CONF_HOST])
-                    if len(self.available_devices) <= 0:
-                        return self.async_create_entry(title=self.data[CONF_AREA_NAME], data=self.data)
-                    else:
-                        return await self.async_step_hosts()
-                # User is done adding repos, create the config entry.
-                return self.async_create_entry(title=self.data[CONF_AREA_NAME], data=self.data)
-
-        return self.async_show_form(
-            step_id="hosts", 
-            data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST, default=None): vol.In(self.devices),
-                        vol.Optional(CONF_NAME): cv.string,
-                        vol.Optional(CONF_ADD_ANODHER): cv.boolean,
-                    }
-                ), errors=errors
-            )
         
     @staticmethod
     @callback
@@ -208,9 +169,32 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         _LOGGER.debug("find network")
         self.devices = []
         self._searched = False
-
+        self._autosearch = False
+        self.available_devices = []
 
     async def async_step_init(
+        self, user_input: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+
+
+        errors: Dict[str, str] = {}
+
+        if user_input is not None:
+            if not errors:
+                self._autosearch = user_input.get(CONF_AUTO_SEARCH)
+                _LOGGER.debug("call async_step_search")
+                return await self.async_step_search()
+        options_schema = vol.Schema(
+            {
+                vol.Optional(CONF_AUTO_SEARCH): selector.BooleanSelector(selector.BooleanSelectorConfig()),
+            }
+        )
+        return self.async_show_form(
+            step_id="init", data_schema=options_schema, errors=errors
+        )
+
+
+    async def async_step_search(
         self, user_input: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Manage the options for the custom component."""
@@ -227,7 +211,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         # Default value for our multi-select.
         #entity_map = {e.entity_id : e for e in entries}
 
-        if not self._searched:
+        if not self._searched and self._autosearch:
             self.available_devices = await get_available_device(self.hass)
             self._searched = True
         all_devices = {}
@@ -261,7 +245,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             if user_input.get(CONF_ADD_ANODHER, False):
-                if len(self.available_devices) <= 0:
+                if len(self.available_devices) <= 0 and self._autosearch:
                     errors["base"] = "no_more_device"
 
             if not errors:
@@ -325,6 +309,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 self.data["modifydatetime"] = datetime.now()
                 return self.async_create_entry(title=self.data[CONF_AREA_NAME], data=self.data)
 
+        _LOGGER.debug("start async_step_search")
         options_schema = vol.Schema(
             {
                 vol.Optional(CONF_DEVICES, default=list(all_devices)): cv.multi_select(all_devices),
@@ -339,7 +324,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(
-            step_id="init", data_schema=options_schema, errors=errors
+            step_id="search", data_schema=options_schema, errors=errors
         )
 
     async def async_step_hosts(self, user_input: Optional[Dict[str, Any]] = None):
@@ -348,7 +333,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             try:
                 await validate_input(
-                    user_input[CONF_HOST]
+                    user_input[CONF_HOST], self._autosearch
                 )
             except ValueError:
                 errors["base"] = "invalid_host"
@@ -366,22 +351,38 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 # additional repo.
                 self.data["modifydatetime"] = datetime.now()
                 if user_input.get(CONF_ADD_ANODHER, False):
-                    self.available_devices.remove(user_input[CONF_HOST])
-                    if len(self.available_devices) <= 0:
-                        return self.async_create_entry(title=self.data[CONF_AREA_NAME], data=self.data)
+                    if self._autosearch:
+                        self.available_devices.remove(user_input[CONF_HOST])
+                        if len(self.available_devices) <= 0:
+                            return self.async_create_entry(title=self.data[CONF_AREA_NAME], data=self.data)
+                        else:
+                            return await self.async_step_hosts()
                     else:
+                        _LOGGER.debug("call add another")
                         return await self.async_step_hosts()
                 # User is done adding repos, create the config entry.
                 return self.async_create_entry(title=self.data[CONF_AREA_NAME], data=self.data)
 
-        return self.async_show_form(
-            step_id="hosts", 
-            data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST, default=None): vol.In(self.available_devices),
-                        vol.Optional(CONF_NAME): cv.string,
-                        vol.Optional(CONF_ADD_ANODHER): cv.boolean,
-                    }
+        if self._autosearch:
+            return self.async_show_form(
+                step_id="hosts",
+                data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_HOST, default=None): vol.In(self.available_devices),
+                            vol.Optional(CONF_NAME): cv.string,
+                            vol.Optional(CONF_ADD_ANODHER): cv.boolean,
+                        }
+                ), errors=errors
+            )
+        else:
+            return self.async_show_form(
+                step_id="hosts",
+                data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_HOST, default=""): cv.string,
+                            vol.Optional(CONF_NAME): cv.string,
+                            vol.Optional(CONF_ADD_ANODHER): cv.boolean,
+                        }
                 ), errors=errors
             )
 
