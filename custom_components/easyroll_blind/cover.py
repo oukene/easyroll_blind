@@ -8,7 +8,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
-    DEVICE_CLASS_BLIND,
+    CoverDeviceClass,
     STATE_OPEN,
     STATE_CLOSED,
     STATE_OPENING,
@@ -58,7 +58,7 @@ class HelloWorldCover(CoverEntity):
         self.hass = hass
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, "{}_{}".format(roller.roller_id, name), hass=hass)
-        self._device_class = DEVICE_CLASS_BLIND
+        self._device_class = CoverDeviceClass.BLIND
         if roller._group_device == True:
             self._supported_features = SUPPORT_SET_POSITION | SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
         else:
