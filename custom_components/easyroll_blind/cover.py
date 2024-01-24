@@ -4,10 +4,7 @@ import logging
 import threading
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
+    CoverEntityFeature,
     CoverDeviceClass,
     STATE_OPEN,
     STATE_CLOSED,
@@ -59,10 +56,11 @@ class HelloWorldCover(CoverEntity):
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, "{}_{}".format(roller.roller_id, name), hass=hass)
         self._device_class = CoverDeviceClass.BLIND
-        if roller._group_device == True:
-            self._supported_features = SUPPORT_SET_POSITION | SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
-        else:
-            self._supported_features = SUPPORT_SET_POSITION | SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        self._supported_features = CoverEntityFeature.SET_POSITION | CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        # if roller._group_device == True:
+        #     self._supported_features = CoverEntityFeature.SET_POSITION | CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        # else:
+        #     self._supported_features = CoverEntityFeature.SET_POSITION | CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
 
     async def async_added_to_hass(self):
         self._roller.register_callback(self.async_write_ha_state)
