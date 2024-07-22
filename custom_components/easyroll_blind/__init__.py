@@ -52,11 +52,12 @@ async def async_setup_entry(
     if add_group_device == True:
         hub2.rollers.append(hub.Roller(area_name, "0.0.0.0", 0, "GROUP", hub2))
 
-    for component in PLATFORMS:
-        _LOGGER.debug("create component : " + component)
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    # for component in PLATFORMS:
+    #     _LOGGER.debug("create component : " + component)
+    #     hass.async_create_task(
+    #         hass.config_entries.async_forward_entry_setup(entry, component)
+    #     )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     """
     if network_search == False:
