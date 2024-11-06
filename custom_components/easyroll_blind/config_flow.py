@@ -19,7 +19,6 @@ from homeassistant.helpers.device_registry import (
 import ipaddress
 from homeassistant import config_entries, exceptions
 from homeassistant.core import callback
-from homeassistant.config import CONF_NAME
 from homeassistant.helpers import selector
 
 from homeassistant.components.network import async_get_adapters

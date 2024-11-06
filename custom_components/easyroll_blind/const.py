@@ -1,7 +1,7 @@
 TEST = False
 
 DOMAIN = "easyroll_blind"
-VERSION = "1.0.3"
+VERSION = "1.0.4"
 
 SEARCH_TIMEOUT = 1 if TEST else 10
 SEARCH_PERIOD = 120
@@ -12,6 +12,7 @@ CONF_AREA_NAME = "area_name"
 CONF_REFRESH_INTERVAL = "refresh_interval"
 CONF_USE_SETUP_MODE = "use_setup"
 CONF_DEVICES = "conf_devices"
+CONF_NAME = "name"
 CONF_HOST = "host"
 CONF_ADD_ANODHER = "add_another"
 CONF_ADD_GROUP_DEVICE = "add_group_device"
