@@ -11,7 +11,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import requests
 from timeit import default_timer as dt
 
-from homeassistant.components.cover import DOMAIN, STATE_CLOSING, STATE_OPENING
+from homeassistant.components.cover import DOMAIN, CoverState
 from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
@@ -392,10 +392,13 @@ class Roller:
     # notified of any state changeds for the relevant device.
     async def publish_updates(self, position):
         """Schedule call all registered callbacks."""
+        _LOGGER.debug("call publish_updates")
         if self._current_position > (100 - position):
-            self._state = STATE_CLOSING
+            _LOGGER.debug("set closing...")
+            self._state = CoverState.CLOSING
         elif self._current_position < (100 - position):
-            self._state = STATE_OPENING
+            _LOGGER.debug("set opening...")
+            self._state = CoverState.OPENING
         else:
             self._state = "none"
             

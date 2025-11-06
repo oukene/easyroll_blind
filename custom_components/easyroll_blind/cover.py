@@ -6,10 +6,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverEntityFeature,
     CoverDeviceClass,
-    STATE_OPEN,
-    STATE_CLOSED,
-    STATE_OPENING,
-    STATE_CLOSING,
+    CoverState,
     CoverEntity,
 )
 
@@ -97,7 +94,9 @@ class HelloWorldCover(CoverEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return STATE_CLOSED if self._roller._current_position < 100 else STATE_OPEN
+        #if self._roller.moving == 1:
+        #    return self._roller._state
+        return CoverState.CLOSED if self._roller._current_position < 100 else CoverState.OPEN
         #return self._roller._current_position
 
     @property
@@ -129,11 +128,13 @@ class HelloWorldCover(CoverEntity):
 
     @property
     def is_opening(self):
-        return self._roller._state == STATE_OPENING
+        self._attr_is_opening = (self._roller._state == CoverState.OPENING)
+        return self._attr_is_opening
 
     @property
     def is_closing(self):
-        return self._roller._state == STATE_CLOSING
+        self._attr_is_closing = (self._roller._state == CoverState.CLOSING)
+        return self._attr_is_closing
 
     # @property
     # def is_closing(self):
