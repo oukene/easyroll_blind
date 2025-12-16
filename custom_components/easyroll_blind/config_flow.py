@@ -157,7 +157,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handles options flow for the component."""
 
     def __init__(self, config_entry) -> None:
-        self.config_entry = config_entry
         self.data = {}
         self.data[CONF_AREA_NAME] = config_entry.data[CONF_AREA_NAME]
         self.data[CONF_DEVICES] = config_entry.data[CONF_DEVICES]
